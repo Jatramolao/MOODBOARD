@@ -194,7 +194,9 @@ export function BoardCard({
               card.sectionId === "general" && card.y < 460 ? "eager" : "lazy"
             }
             draggable={false}
-            unoptimized={card.imageUrl.startsWith("data:")}
+            unoptimized={
+              Boolean(card.imagePath) || card.imageUrl.startsWith("data:")
+            }
           />
           <div className="image-caption">{card.title}</div>
         </>
