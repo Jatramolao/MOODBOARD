@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 type HomeProps = {
-  searchParams: Promise<{ board?: string }>;
+  searchParams: Promise<{ board?: string; setup?: string }>;
 };
 
 function getInitials(name: string) {
@@ -26,7 +26,8 @@ export default async function Home({ searchParams }: HomeProps) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
-  const requestedBoard = (await searchParams).board;
+  const params = await searchParams;
+  const requestedBoard = params.board;
   let query = supabase
     .from("boards")
     .select("id,name,project_id,projects!inner(name)")
@@ -40,7 +41,18 @@ export default async function Home({ searchParams }: HomeProps) {
     user.email?.split("@")[0] ||
     "Creativo";
 
-  if (!board) return <WorkspaceSetup name={displayName} />;
+  if (!board) {
+    return (
+      <WorkspaceSetup
+        error={
+          params.setup && params.setup !== "missing-name"
+            ? params.setup
+            : undefined
+        }
+        name={displayName}
+      />
+    );
+  }
 
   const { data: membership } = await supabase
     .from("project_members")

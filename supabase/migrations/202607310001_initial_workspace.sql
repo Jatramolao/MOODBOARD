@@ -140,6 +140,15 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
 
+-- Projects can already contain Auth users when this migration is introduced.
+insert into public.profiles (id, display_name, avatar_url)
+select
+  id,
+  coalesce(raw_user_meta_data ->> 'full_name', split_part(email, '@', 1)),
+  raw_user_meta_data ->> 'avatar_url'
+from auth.users
+on conflict (id) do nothing;
+
 create function public.add_project_owner()
 returns trigger
 language plpgsql
