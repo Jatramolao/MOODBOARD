@@ -400,15 +400,21 @@ create function public.create_project_with_board(
 )
 returns table (project_id uuid, board_id uuid)
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
+  requesting_user_id uuid;
   created_project_id uuid;
   created_board_id uuid;
 begin
+  requesting_user_id := (select auth.uid());
+  if requesting_user_id is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+
   insert into public.projects (owner_id, name, client_name)
-  values ((select auth.uid()), trim(p_name), nullif(trim(p_client_name), ''))
+  values (requesting_user_id, trim(p_name), nullif(trim(p_client_name), ''))
   returning id into created_project_id;
 
   insert into public.boards (project_id, name)
