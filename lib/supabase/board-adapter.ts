@@ -9,7 +9,12 @@ import type {
   BoardCard,
   BoardCardType,
   BoardSection,
+  BoardState,
 } from "@/lib/board-types";
+import {
+  buildBoardOperations,
+  cloneBoard,
+} from "@/lib/backend/board-operations";
 import { createClient } from "./client";
 import { getSupabaseEnv } from "./env";
 
@@ -42,7 +47,9 @@ type ItemRow = {
   image_path: string | null;
   source_url: string | null;
   colors: string[] | null;
+  asset_id: string | null;
 };
+
 
 function safeAssetName(name: string) {
   const extension = name.includes(".") ? name.split(".").pop() : "jpg";
@@ -122,13 +129,16 @@ export function createSupabaseBoardAdapter({
   const client = createClient();
   if (!client) return null;
   let channel: RealtimeChannel | null = null;
+  let boardVersion = 1;
+  let lastSavedBoard: BoardState | null = null;
+  let saveQueue: Promise<void> = Promise.resolve();
 
   return {
     kind: "supabase",
 
     async load() {
       const [boardResult, sectionsResult, itemsResult] = await Promise.all([
-        client.from("boards").select("zoom").eq("id", boardId).single(),
+        client.from("boards").select("zoom,version").eq("id", boardId).single(),
         client
           .from("board_sections")
           .select("id,name,width,position")
@@ -137,9 +147,10 @@ export function createSupabaseBoardAdapter({
         client
           .from("board_items")
           .select(
-            "id,section_id,type,x,y,width,height,title,content,image_path,source_url,colors",
+            "id,section_id,type,x,y,width,height,title,content,image_path,source_url,colors,asset_id",
           )
           .eq("board_id", boardId)
+          .is("deleted_at", null)
           .order("created_at"),
       ]);
 
@@ -157,9 +168,10 @@ export function createSupabaseBoardAdapter({
       const signedByPath = new Map<string, string>();
 
       if (privatePaths.length) {
-        const { data } = await client.storage
+        const { data, error } = await client.storage
           .from(ASSET_BUCKET)
           .createSignedUrls(privatePaths, SIGNED_URL_TTL_SECONDS);
+        if (error) throw error;
         data?.forEach((asset: { path?: string; signedUrl?: string }) => {
           if (asset.path && asset.signedUrl) {
             signedByPath.set(asset.path, asset.signedUrl);
@@ -179,50 +191,75 @@ export function createSupabaseBoardAdapter({
         content: row.content ?? undefined,
         colors: row.colors ?? undefined,
         imagePath: row.image_path ?? undefined,
+        assetId: row.asset_id ?? undefined,
         imageUrl:
           (row.image_path && signedByPath.get(row.image_path)) ||
           row.source_url ||
           undefined,
       }));
 
-      return {
+      const loadedBoard = {
         sections,
         cards,
         zoom: Number(boardResult.data.zoom ?? 0.82),
       };
+      boardVersion = Number(boardResult.data.version ?? 1);
+      lastSavedBoard = cloneBoard(loadedBoard);
+      return loadedBoard;
     },
 
     async save(board) {
-      const { error } = await client.rpc("save_board_snapshot", {
-        p_board_id: boardId,
-        p_zoom: board.zoom,
-        p_sections: board.sections.map((section, position) => ({
-          ...section,
-          position,
-        })),
-        p_items: board.cards.map((card) => ({
-          id: card.id,
-          section_id: card.sectionId,
-          type: card.type,
-          x: card.x,
-          y: card.y,
-          width: card.width,
-          height: card.height,
-          title: card.title ?? null,
-          content: card.content ?? null,
-          image_path: card.imagePath ?? null,
-          source_url: card.imagePath ? null : card.imageUrl ?? null,
-          colors: card.colors ?? null,
-        })),
+      const requestedBoard = cloneBoard(board);
+      saveQueue = saveQueue.catch(() => undefined).then(async () => {
+        if (!lastSavedBoard) {
+          lastSavedBoard = cloneBoard(requestedBoard);
+          return;
+        }
+        const operations = buildBoardOperations(lastSavedBoard, requestedBoard);
+        if (!operations.length) return;
+
+        const { data, error } = await client.rpc("apply_board_operations", {
+          p_board_id: boardId,
+          p_base_version: boardVersion,
+          p_operation_id: crypto.randomUUID(),
+          p_operations: operations,
+        });
+        if (error) {
+          if (error.message.includes("VERSION_CONFLICT")) {
+            throw new Error(
+              "El tablero cambió en otro dispositivo. Recarga para integrar los cambios.",
+            );
+          }
+          throw error;
+        }
+        const result = Array.isArray(data) ? data[0] : data;
+        boardVersion = Number(result?.board_version ?? boardVersion + 1);
+        lastSavedBoard = cloneBoard(requestedBoard);
       });
-      if (error) throw error;
+      return saveQueue;
     },
 
     async uploadImages(files) {
       return Promise.all(
-        files.map((file) => {
+        files.map(async (file) => {
           const path = `${projectId}/${boardId}/${crypto.randomUUID()}-${safeAssetName(file.name)}`;
-          return uploadAsset(file, path, client);
+          const uploaded = await uploadAsset(file, path, client);
+          const { data, error } = await client.rpc("register_asset", {
+            p_project_id: projectId,
+            p_board_id: boardId,
+            p_storage_path: path,
+            p_original_name: file.name,
+            p_mime_type: file.type,
+            p_byte_size: file.size,
+          });
+          if (error) {
+            await client.storage.from(ASSET_BUCKET).remove([path]);
+            throw error;
+          }
+          return {
+            ...uploaded,
+            assetId: typeof data === "string" ? data : undefined,
+          };
         }),
       );
     },

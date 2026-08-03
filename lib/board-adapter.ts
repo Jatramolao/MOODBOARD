@@ -3,6 +3,7 @@ import type { BoardState } from "./board-types";
 export type UploadedBoardAsset = {
   imageUrl: string;
   imagePath?: string;
+  assetId?: string;
 };
 
 export interface BoardAdapter {

@@ -1,0 +1,134 @@
+# Informe de QA — Moodboard Editorial
+
+Fecha: 31 de julio de 2026  
+Alcance: código local, interfaz, persistencia local, producción en Vercel y
+configuración activa de Supabase.
+
+## Resumen
+
+Actualización backend v1 — 3 de agosto de 2026:
+
+- Migración colaborativa aplicada correctamente en Supabase producción.
+- Prueba SQL transaccional aprobada: esquema, RLS, bootstrap, versionado,
+  idempotencia y aislamiento entre usuarios.
+- Suite automatizada: 8 de 8 pruebas aprobadas.
+- `typecheck`, ESLint y build de producción aprobados con las nuevas rutas.
+- Los hallazgos backend de alta prioridad de este informe quedaron resueltos;
+  las pantallas que los consumen se entregan a la sesión de frontend.
+
+- Calidad de compilación: aprobada.
+- Dependencias de producción: 0 vulnerabilidades conocidas.
+- Integridad de Supabase: aprobada; no hay relaciones rotas ni archivos
+  faltantes o huérfanos.
+- Seguridad base: RLS habilitado en las 7 tablas públicas, bucket privado y RPC
+  restringidos a usuarios autenticados.
+- Interacciones principales del lienzo: carga, render, zoom, movimiento,
+  creación de notas y extensión por disciplinas aprobadas.
+- Preparación como producto: incompleta. Compartir, invitaciones, comentarios,
+  búsqueda, equipo y gestión de múltiples tableros aún son controles
+  demostrativos.
+
+## Matriz de pruebas
+
+| Área | Prueba | Resultado |
+|---|---|---|
+| Código | `npm run lint` | Aprobada |
+| Código | `npm run typecheck` | Aprobada |
+| Código | `npm run build` | Aprobada |
+| Dependencias | `npm audit --omit=dev` | Aprobada, 0 vulnerabilidades |
+| Producción | `/` sin sesión redirige a `/auth` | Aprobada, HTTP 307 |
+| Producción | `/auth` responde correctamente | Aprobada, HTTP 200 |
+| Autenticación | Campo obligatorio y validación de formato email | Aprobada |
+| Autenticación | Callback inválido no permite redirección externa | Aprobada |
+| Tablero | Render inicial de imágenes | Aprobada |
+| Tablero | Zoom acercar, alejar y ajustar | Aprobada |
+| Tablero | Crear nota | Aprobada |
+| Tablero | Mover tarjeta con teclado | Aprobada |
+| Tablero | Arrastrar tarjeta con puntero | Aprobada |
+| Tablero | Redimensionar tarjeta | Revisión manual pendiente; automatización no produjo un desplazamiento fiable |
+| Tablero | Confirmación antes de eliminar | El diálogo se abre; aceptación final pendiente de revisión manual |
+| Tablero | Extender con sección “Casting” | Aprobada |
+| Imágenes | Selector múltiple y carga PNG | Aprobada |
+| Imágenes | Imagen cargada decodifica con dimensiones válidas | Aprobada |
+| Persistencia | Recarga conserva secciones, tarjetas e imagen | Aprobada |
+| Compartir | Abrir y cerrar diálogo | Aprobada |
+| Compartir | Copiar enlace | Fallida; puede mostrar “Copiado” con portapapeles vacío |
+| Responsive | 390 px sin desborde global | Aprobada |
+| Responsive | 768 px con sidebar compacta | Aprobada |
+| Consola | Errores o advertencias durante recorridos | Ninguno |
+
+## Estado de Supabase
+
+Datos observados durante el ciclo:
+
+- 1 perfil, 1 proyecto, 1 membresía, 1 tablero y 1 sección.
+- 3 elementos de tablero y 3 archivos privados.
+- 0 membresías de propietario faltantes.
+- 0 elementos vinculados a una sección de otro tablero.
+- 0 referencias a archivos inexistentes.
+- 0 archivos huérfanos.
+- 7 de 7 tablas públicas con RLS.
+- Bucket `board-assets` privado, límite de 50 MB.
+- 4 políticas de Storage y 2 políticas de Realtime para `authenticated`.
+- Los roles `anon` no pueden ejecutar los RPC de creación o guardado.
+- Los roles `authenticated` sí pueden ejecutarlos.
+- `create_project_with_board` usa `SECURITY DEFINER`; `save_board_snapshot`
+  conserva `SECURITY INVOKER`.
+
+## Hallazgos
+
+### Alta prioridad (resuelta en backend v1)
+
+1. Resuelto: guardado por operaciones atómicas, versión optimista e
+   idempotencia; Realtime provoca una recarga segura.
+2. Resuelto en backend: invitaciones, permisos, comentarios y enlaces
+   compartidos tienen RPC/endpoints. Falta su interfaz.
+3. Resuelto en backend: CRUD, duplicación, orden y archivado de múltiples
+   tableros. Falta su interfaz.
+
+### Prioridad media
+
+1. “Compartir” muestra `moodboard.app/campana-otono`, pero intenta copiar la URL
+   actual. Además informa “Copiado” aunque la API del portapapeles no esté
+   disponible o falle.
+2. Los botones Buscar, Referencias, Equipo, perfil, Más opciones y Puede
+   comentar no tienen comportamiento.
+3. Las notas pueden crearse, pero su título y contenido no pueden editarse.
+4. Si Realtime no devuelve presencia, producción puede mostrar los 3
+   colaboradores ficticios del modo demo.
+5. El callback añade `?error=callback`, pero la pantalla de autenticación no
+   explica ese error al usuario.
+6. El estado de sincronización y sus errores no usan una región `aria-live`;
+   el detalle del error solo está en `title`.
+7. El diálogo mueve el foco al abrir y lo restaura al cerrar, pero no contiene
+   el foco dentro del modal.
+8. Al eliminar una tarjeta con imagen no se elimina su objeto de Storage. Una
+   carga múltiple parcialmente fallida también puede dejar archivos sin
+   referencia.
+
+### Endurecimiento recomendado
+
+- Añadir Content Security Policy, `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` y protección contra framing.
+- Ocultar `X-Powered-By`.
+- Crear una suite automatizada versionada; actualmente el repositorio no tiene
+  tests unitarios, de integración ni E2E.
+
+## Cobertura pendiente
+
+No se envió un magic link durante este ciclo para evitar generar correos reales
+de prueba. Por ello requieren una última sesión manual autenticada:
+
+- recepción y consumo del magic link;
+- redimensionamiento fino con mouse/touch;
+- aceptación final del borrado y persistencia remota;
+- edición simultánea real con 2 usuarios;
+- carga reanudable de un archivo mayor a 6 MB;
+- comportamiento de una cuenta `viewer`.
+
+## Criterio de salida
+
+La implementación actual es utilizable como herramienta interna de un solo
+equipo y un tablero. Antes de presentarla como producto colaborativo, deben
+resolverse los 3 hallazgos de alta prioridad y añadirse pruebas E2E
+repetibles.

@@ -1,13 +1,16 @@
 {
   "name": "moodboard-editorial",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/backend/*.test.ts",
+    "test:backend": "npm run typecheck && npm run lint && npm test"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

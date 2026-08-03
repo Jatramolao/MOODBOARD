@@ -28,6 +28,10 @@ Abre `http://localhost:3000`.
 - Imágenes privadas con URL firmada y carga reanudable para archivos grandes.
 - Presencia de colaboradores y actualización del tablero mediante canales
   privados de Realtime.
+- Guardado colaborativo versionado, atómico e idempotente.
+- Múltiples tableros con duplicación, orden y archivado.
+- Invitaciones, permisos de comentario y enlaces compartidos revocables.
+- Comentarios anclados, actividad, notificaciones y mantenimiento programado.
 - Vista de compartir y controles accesibles.
 - Diseño responsive para revisión desde pantallas pequeñas.
 
@@ -44,14 +48,15 @@ si existen, exige una sesión y utiliza el adaptador remoto.
 ## Configurar Supabase
 
 1. Crea un proyecto en Supabase.
-2. Ejecuta
-   [`supabase/migrations/202607310001_initial_workspace.sql`](supabase/migrations/202607310001_initial_workspace.sql)
-   desde SQL Editor (o con `supabase db push`).
-3. Copia `.env.example` como `.env.local` y agrega la URL y la publishable key.
-4. En Authentication → URL Configuration agrega:
+2. Ejecuta en orden las migraciones de `supabase/migrations` desde SQL Editor
+   o con `supabase db push`.
+3. Ejecuta `supabase/tests/backend_v1.sql`; debe devolver
+   `backend_v1 QA passed`.
+4. Copia `.env.example` como `.env.local` y agrega las variables.
+5. En Authentication → URL Configuration agrega:
    - `http://localhost:3000/auth/callback`
    - `https://TU-DOMINIO.vercel.app/auth/callback`
-5. Reinicia `npm run dev`. El primer usuario podrá crear su proyecto inicial
+6. Reinicia `npm run dev`. El primer usuario podrá crear su proyecto inicial
    desde la propia interfaz.
 
 La migración crea tablas, índices, funciones transaccionales, políticas RLS,
@@ -66,7 +71,12 @@ Importa el repositorio en Vercel y configura en Production y Preview:
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 NEXT_PUBLIC_SITE_URL
+SUPABASE_SERVICE_ROLE_KEY
+CRON_SECRET
 ```
+
+`RESEND_API_KEY` y `EMAIL_FROM` son opcionales. Sin ellos, las invitaciones
+devuelven un enlace manual para copiar.
 
 Después de desplegar, agrega también la URL real de callback en Supabase. El
 comando de compilación es `npm run build`.
@@ -76,6 +86,11 @@ comando de compilación es `npm run build`.
 ```bash
 npm run typecheck
 npm run lint
+npm test
 npm run build
 npm audit --omit=dev
 ```
+
+Consulta [docs/BACKEND.md](docs/BACKEND.md),
+[docs/OPERATIONS.md](docs/OPERATIONS.md) y el traspaso específico en
+[docs/FRONTEND_HANDOFF.md](docs/FRONTEND_HANDOFF.md).

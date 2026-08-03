@@ -16,6 +16,7 @@ export type BoardCard = {
   height: number;
   imageUrl?: string;
   imagePath?: string;
+  assetId?: string;
   title?: string;
   content?: string;
   colors?: string[];

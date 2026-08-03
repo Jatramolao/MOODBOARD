@@ -73,6 +73,7 @@ export function BoardProvider({
   useEffect(() => {
     let mounted = true;
     let unsubscribe: (() => void) | undefined;
+    let remoteRefreshTimer: number | undefined;
 
     const hydrate = async () => {
       if (!adapter) {
@@ -92,8 +93,7 @@ export function BoardProvider({
         setSyncStatus("saved");
         setHydrated(true);
 
-        unsubscribe = adapter.subscribe(async () => {
-          if (Date.now() - lastLocalSave.current < 1_500) return;
+        const refreshRemote = async () => {
           try {
             const updated = await adapter.load();
             if (!mounted || !updated) return;
@@ -107,6 +107,16 @@ export function BoardProvider({
               error instanceof Error ? error.message : "No se pudo sincronizar.",
             );
           }
+        };
+
+        unsubscribe = adapter.subscribe(() => {
+          if (remoteRefreshTimer) window.clearTimeout(remoteRefreshTimer);
+          const elapsed = Date.now() - lastLocalSave.current;
+          const delay = Math.max(0, 1_500 - elapsed);
+          remoteRefreshTimer = window.setTimeout(
+            () => void refreshRemote(),
+            delay,
+          );
         });
       } catch (error) {
         if (!mounted) return;
@@ -121,6 +131,7 @@ export function BoardProvider({
     void hydrate();
     return () => {
       mounted = false;
+      if (remoteRefreshTimer) window.clearTimeout(remoteRefreshTimer);
       unsubscribe?.();
     };
   }, [adapter]);
@@ -266,6 +277,7 @@ export function BoardProvider({
           height: 270,
           imageUrl: asset.imageUrl,
           imagePath: asset.imagePath,
+          assetId: asset.assetId,
           title: accepted[index].name.replace(/\.[^.]+$/, ""),
         }));
         return { ...current, cards: [...current.cards, ...additions] };
