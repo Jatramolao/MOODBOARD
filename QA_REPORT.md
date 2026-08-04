@@ -6,6 +6,28 @@ configuración activa de Supabase.
 
 ## Resumen
 
+Actualización integración/QA — 4 de agosto de 2026:
+
+- Rama de iteración: `codex/001-collaborative-v1`.
+- Suite local integrada: 16/16 pruebas aprobadas.
+- Suite HTTP de integración: 3/3 pruebas aprobadas contra el servidor local.
+- TypeScript, ESLint, build de producción y `git diff --check`: aprobados.
+- Dependencias de producción: 0 vulnerabilidades conocidas.
+- Callback con destino externo, token compartido inválido e identificadores
+  inválidos de invitación/share: respuestas seguras y normalizadas aprobadas.
+- Autenticación, invitación y share públicos verificados sin errores de
+  consola; responsive aprobado en 390, 768, 1280 y 1440 px.
+- Se añadieron confirmaciones y manejo visible de errores a revocaciones,
+  archivado y eliminación de integrantes; también etiquetas accesibles en los
+  formularios revisados.
+- La pantalla compartida ahora presenta el autor recibido por el backend y un
+  mensaje comprensible cuando el enlace no existe o fue revocado.
+
+El único bloqueo de QA previo a preview es el recorrido autenticado real con
+owner, editor, viewer y dos sesiones. Requiere iniciar sesión y disponer de las
+cuentas de prueba correspondientes; no se generaron usuarios ni correos reales
+sin autorización.
+
 Actualización integración frontend/backend — 3 de agosto de 2026:
 
 - Suite integrada local: 16/16 pruebas aprobadas.
@@ -54,6 +76,7 @@ Actualización backend v1 — 3 de agosto de 2026:
 | Código | `npm run lint` | Aprobada |
 | Código | `npm run typecheck` | Aprobada |
 | Código | `npm run build` | Aprobada |
+| Integración | `npm run test:integration` | Aprobada, 3/3 contra servidor local |
 | Dependencias | `npm audit --omit=dev` | Aprobada, 0 vulnerabilidades |
 | Producción | `/` sin sesión redirige a `/auth` | Aprobada, HTTP 307 |
 | Producción | `/auth` responde correctamente | Aprobada, HTTP 200 |
@@ -71,7 +94,7 @@ Actualización backend v1 — 3 de agosto de 2026:
 | Imágenes | Imagen cargada decodifica con dimensiones válidas | Aprobada |
 | Persistencia | Recarga conserva secciones, tarjetas e imagen | Aprobada |
 | Compartir | Abrir y cerrar diálogo | Aprobada |
-| Compartir | Copiar enlace | Fallida; puede mostrar “Copiado” con portapapeles vacío |
+| Compartir | Copiar enlace | Corregida; el fallo del portapapeles produce instrucción manual |
 | Responsive | 390 px sin desborde global | Aprobada |
 | Responsive | 768 px con sidebar compacta | Aprobada |
 | Consola | Errores o advertencias durante recorridos | Ninguno |
@@ -105,14 +128,13 @@ Datos observados durante el ciclo:
 3. Resuelto en backend: CRUD, duplicación, orden y archivado de múltiples
    tableros. Falta su interfaz.
 
-### Prioridad media
+### Prioridad media histórica
 
-1. “Compartir” muestra `moodboard.app/campana-otono`, pero intenta copiar la URL
-   actual. Además informa “Copiado” aunque la API del portapapeles no esté
-   disponible o falle.
+1. Resuelto en frontend colaborativo: los enlaces son generados por backend y
+   el fallo del portapapeles ya no informa una copia exitosa.
 2. Los botones Buscar, Referencias, Equipo, perfil, Más opciones y Puede
    comentar no tienen comportamiento.
-3. Las notas pueden crearse, pero su título y contenido no pueden editarse.
+3. Resuelto en frontend colaborativo: las notas pueden editarse y persistirse.
 4. Si Realtime no devuelve presencia, producción puede mostrar los 3
    colaboradores ficticios del modo demo.
 5. El callback añade `?error=callback`, pero la pantalla de autenticación no

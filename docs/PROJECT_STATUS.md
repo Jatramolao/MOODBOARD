@@ -6,13 +6,14 @@
 
 Integración y QA conjunto del backend y frontend colaborativo v1.
 
-La implementación frontend cerró su handoff en el commit local `fec5fc6`. El
-árbol conserva cambios de backend, documentación y migraciones de otras
-sesiones; no deben incluirse en commits de frontend.
+Backend y frontend cerraron sus handoffs. La sesión de integración trabaja en
+la rama común `codex/001-collaborative-v1` y completó la validación automática,
+el QA público y una ronda de endurecimiento de accesibilidad y acciones
+destructivas. El recorrido autenticado por roles sigue pendiente.
 
 ## Base confirmada
 
-- Rama actual: `main`.
+- Rama actual: `codex/001-collaborative-v1`.
 - Backend v1: commit local `f6af218`.
 - Corrección backend de tokens `pgcrypto`: commit local `746acbf`.
 - Frontend colaborativo v1: commit local `fec5fc6`.
@@ -26,6 +27,9 @@ sesiones; no deben incluirse en commits de frontend.
   7/7 pruebas aprobadas.
 - TypeScript, ESLint, build de producción y `git diff --check`: aprobados el 4
   de agosto de 2026.
+- Suite HTTP de integración: 3/3 pruebas aprobadas para callback seguro,
+  errores compartidos normalizados y validación previa de identificadores.
+- Auditoría de dependencias de producción: 0 vulnerabilidades conocidas.
 - Migración `202608030002_fix_pgcrypto_search_path.sql`: aplicada en Supabase
   el 4 de agosto de 2026.
 - Prueba SQL ampliada: aprobada con generación de invitaciones, creación y
@@ -33,6 +37,11 @@ sesiones; no deben incluirse en commits de frontend.
 - QA público/local: autenticación inválida, callback expirado, invitación
   inválida, sanitización de errores, edición de notas, persistencia, zoom y
   responsive base aprobados sin errores de consola.
+- QA responsive público repetido en 390, 768, 1280 y 1440 px, sin desborde
+  global ni advertencias de consola.
+- Endurecimiento integrado: confirmación y manejo de error al revocar enlaces
+  e invitaciones, confirmación al archivar o quitar integrantes, etiquetado
+  accesible de formularios y autor real en comentarios compartidos.
 
 ## Hallazgo backend resuelto
 
@@ -50,10 +59,12 @@ No quedan bloqueos backend conocidos para continuar la integración.
 
 ## Responsable actual y siguiente handoff
 
-1. Handoff frontend completado en `fec5fc6`.
+1. Integración automática y QA público completados en la rama de iteración.
 2. Completar E2E autenticado con owner, editor, viewer, dos sesiones,
    invitaciones, share y comentarios.
-3. GitHub/Vercel producción quedan pendientes hasta aprobar integración.
+3. Crear preview y ejecutar smoke tests sólo después de aprobar el E2E
+   autenticado y recibir autorización de push.
+4. GitHub/Vercel producción quedan pendientes hasta aprobar integración.
 
 ## Pendientes de entorno productivo
 
