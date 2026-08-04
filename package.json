@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/backend/*.test.ts",
+    "test": "node --test tests/backend/*.test.ts tests/frontend/*.test.ts",
+    "test:frontend": "node --test tests/frontend/*.test.ts",
     "test:backend": "npm run typecheck && npm run lint && npm test"
   },
   "dependencies": {

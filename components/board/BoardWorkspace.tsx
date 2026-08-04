@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ClockCounterClockwise, GridFour, Images, UsersThree } from "@phosphor-icons/react";
 import { createSupabaseBoardAdapter } from "@/lib/supabase/board-adapter";
 import { BoardCanvas } from "./BoardCanvas";
 import { BoardProvider } from "./BoardProvider";
 import { ExtendDialog, ShareDialog } from "./Dialogs";
 import { Sidebar } from "./Sidebar";
+import type { WorkspaceView } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { useBoardPresence } from "./useBoardPresence";
+import { ContentPanel, UtilityDrawer, type CommentAnchor, type UtilityPanel } from "./WorkspacePanels";
 
 type OpenDialog = "extend" | "share" | null;
 
@@ -24,22 +27,40 @@ export type WorkspaceRuntime =
         name: string;
         initials: string;
         role: string;
+        email: string;
+      };
+      access: {
+        role: "owner" | "editor" | "viewer";
+        canComment: boolean;
       };
     };
 
 function Workspace({ runtime }: { runtime: WorkspaceRuntime }) {
   const [dialog, setDialog] = useState<OpenDialog>(null);
+  const [view, setView] = useState<WorkspaceView>("board");
+  const [utility, setUtility] = useState<UtilityPanel>(null);
+  const [commentAnchor, setCommentAnchor] = useState<CommentAnchor | null>(null);
   const connectedPeople = useBoardPresence(
     runtime.kind === "supabase" ? runtime.boardId : undefined,
     runtime.kind === "supabase" ? runtime.user : undefined,
   );
+
+  useEffect(() => {
+    const openComments = (event: Event) => {
+      const detail = (event as CustomEvent<CommentAnchor>).detail;
+      setCommentAnchor(detail);
+      setUtility("comments");
+    };
+    window.addEventListener("moodboard:comment", openComments);
+    return () => window.removeEventListener("moodboard:comment", openComments);
+  }, []);
 
   return (
     <div className="app-shell">
       <a className="skip-link" href="#board-main">
         Saltar al tablero
       </a>
-      <Sidebar runtime={runtime} />
+      <Sidebar runtime={runtime} view={view} onViewChange={setView} />
       <div className="workspace">
         <Topbar
           boardName={
@@ -47,20 +68,31 @@ function Workspace({ runtime }: { runtime: WorkspaceRuntime }) {
           }
           collaborators={connectedPeople}
           onShare={() => setDialog("share")}
+          onSearch={() => setUtility("search")}
+          onComments={() => { setCommentAnchor(null); setUtility("comments"); }}
+          onNotifications={() => setUtility("notifications")}
           projectName={
             runtime.kind === "supabase"
               ? runtime.projectName
               : "Campaña Otoño 2026"
           }
+          showDemoCollaborators={runtime.kind === "local"}
         />
-        <BoardCanvas onExtend={() => setDialog("extend")} />
+        {view === "board" ? <BoardCanvas onExtend={() => setDialog("extend")} /> : <ContentPanel view={view} runtime={runtime} onViewChange={setView} />}
       </div>
+      {utility ? <UtilityDrawer panel={utility} runtime={runtime} anchorItem={commentAnchor} onClose={() => setUtility(null)} /> : null}
       {dialog === "extend" ? (
         <ExtendDialog onClose={() => setDialog(null)} />
       ) : null}
       {dialog === "share" ? (
-        <ShareDialog onClose={() => setDialog(null)} />
+        <ShareDialog runtime={runtime} onClose={() => setDialog(null)} />
       ) : null}
+      <nav className="mobile-project-nav" aria-label="Secciones del proyecto">
+        <button type="button" data-active={view === "board" || undefined} onClick={() => setView("board")}><GridFour size={18} /><span>Tableros</span></button>
+        <button type="button" data-active={view === "assets" || undefined} onClick={() => setView("assets")}><Images size={18} /><span>Referencias</span></button>
+        <button type="button" data-active={view === "team" || undefined} onClick={() => setView("team")}><UsersThree size={18} /><span>Equipo</span></button>
+        <button type="button" data-active={view === "activity" || undefined} onClick={() => setView("activity")}><ClockCounterClockwise size={18} /><span>Actividad</span></button>
+      </nav>
     </div>
   );
 }
@@ -82,7 +114,10 @@ export function BoardWorkspace({
   );
 
   return (
-    <BoardProvider adapter={adapter}>
+    <BoardProvider
+      adapter={adapter}
+      readOnly={runtime.kind === "supabase" && runtime.access.role === "viewer"}
+    >
       <Workspace runtime={runtime} />
     </BoardProvider>
   );

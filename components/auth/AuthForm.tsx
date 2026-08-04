@@ -3,8 +3,9 @@
 import { ArrowRight, EnvelopeSimple } from "@phosphor-icons/react";
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { safeDestination } from "@/lib/safe-destination";
 
-export function AuthForm() {
+export function AuthForm({ next = "/" }: { next?: string }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<
     "idle" | "sending" | "sent" | "error"
@@ -20,7 +21,7 @@ export function AuthForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeDestination(next))}`,
       },
     });
 

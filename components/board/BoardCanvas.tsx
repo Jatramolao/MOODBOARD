@@ -7,7 +7,7 @@ import {
   NotePencil,
   Plus,
 } from "@phosphor-icons/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BOARD_SECTION_GAP,
   BOARD_WORLD_HEIGHT,
@@ -22,15 +22,23 @@ export function BoardCanvas({
 }) {
   const { state, actions, meta } = useBoard();
   const [dragOver, setDragOver] = useState(false);
+  const [placingComment, setPlacingComment] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const zoomPercent = Math.round(state.zoom * 100);
+
+  useEffect(() => {
+    const startPlacing = () => setPlacingComment(true);
+    window.addEventListener("moodboard:place-comment", startPlacing);
+    return () => window.removeEventListener("moodboard:place-comment", startPlacing);
+  }, []);
 
   return (
     <main
       id="board-main"
       className="canvas-shell"
       onDragOver={(event) => {
+        if (!meta.canEdit) return;
         event.preventDefault();
         setDragOver(true);
       }}
@@ -40,18 +48,18 @@ export function BoardCanvas({
       onDrop={(event) => {
         event.preventDefault();
         setDragOver(false);
-        void actions.addImages(event.dataTransfer.files);
+        if (meta.canEdit) void actions.addImages(event.dataTransfer.files);
       }}
     >
       <h1 className="visually-hidden">
         Moodboard de Campaña Otoño 2026
       </h1>
       <div className="canvas-toolbar" aria-label="Herramientas del tablero">
-        <button type="button" onClick={() => inputRef.current?.click()}>
+        <button type="button" disabled={!meta.canEdit} onClick={() => inputRef.current?.click()}>
           <ImageSquare size={18} />
           Imagen
         </button>
-        <button type="button" onClick={actions.addNote}>
+        <button type="button" disabled={!meta.canEdit} onClick={actions.addNote}>
           <NotePencil size={18} />
           Nota
         </button>
@@ -101,7 +109,18 @@ export function BoardCanvas({
 
       <div
         className="canvas-scroll"
+        data-placing-comment={placingComment || undefined}
         aria-label="Lienzo desplazable del moodboard"
+        onClick={(event) => {
+          if (!placingComment) return;
+          const world = event.currentTarget.querySelector<HTMLElement>(".board-world");
+          if (!world) return;
+          const rect = world.getBoundingClientRect();
+          const x = Math.max(0, (event.clientX - rect.left) / state.zoom);
+          const y = Math.max(0, (event.clientY - rect.top) / state.zoom);
+          setPlacingComment(false);
+          window.dispatchEvent(new CustomEvent("moodboard:comment", { detail: { title: `Punto ${Math.round(x)}, ${Math.round(y)}`, x, y } }));
+        }}
       >
         <div
           className="world-size"
@@ -162,6 +181,7 @@ export function BoardCanvas({
               className="extend-rail"
               type="button"
               onClick={onExtend}
+              disabled={!meta.canEdit}
               style={{
                 left:
                   state.sections.reduce(
@@ -180,6 +200,8 @@ export function BoardCanvas({
           </div>
         </div>
       </div>
+
+      {placingComment ? <div className="comment-placement-hint" role="status">Selecciona un punto del lienzo para anclar el comentario · <button type="button" onClick={() => setPlacingComment(false)}>Cancelar</button></div> : null}
 
       {dragOver ? (
         <div className="drop-overlay">

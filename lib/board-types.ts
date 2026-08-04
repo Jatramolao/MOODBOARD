@@ -39,14 +39,17 @@ export type BoardActions = {
   ) => void;
   resizeCard: (cardId: string, width: number, height: number) => void;
   removeCard: (cardId: string) => void;
+  updateCardText: (cardId: string, title: string, content: string) => void;
   setZoom: (zoom: number) => void;
   resetBoard: () => void;
 };
 
 export type BoardMeta = {
   hydrated: boolean;
-  syncStatus: "local" | "loading" | "saving" | "saved" | "error";
+  syncStatus: "local" | "loading" | "saving" | "saved" | "offline" | "error";
   syncError?: string;
+  canEdit: boolean;
+  versionConflict: boolean;
   worldWidth: number;
   sectionOffsets: Map<string, number>;
 };

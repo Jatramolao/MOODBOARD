@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  Bell,
   CaretRight,
+  ChatCircleDots,
   CloudCheck,
   MagnifyingGlass,
   ShareNetwork,
@@ -20,6 +22,7 @@ const syncLabels = {
   saving: "Guardando…",
   saved: "Guardado",
   local: "Solo en este equipo",
+  offline: "Sin conexión",
   error: "Error al guardar",
 } as const;
 
@@ -27,17 +30,23 @@ export function Topbar({
   boardName,
   collaborators,
   onShare,
+  onSearch,
+  onComments,
+  onNotifications,
   projectName,
+  showDemoCollaborators,
 }: {
   boardName: string;
   collaborators: BoardPerson[];
   onShare: () => void;
+  onSearch: () => void;
+  onComments: () => void;
+  onNotifications: () => void;
   projectName: string;
+  showDemoCollaborators: boolean;
 }) {
   const { meta } = useBoard();
-  const visiblePeople = collaborators.length
-    ? collaborators
-    : demoCollaborators;
+  const visiblePeople = collaborators.length ? collaborators : showDemoCollaborators ? demoCollaborators : [];
 
   return (
     <header className="topbar">
@@ -52,6 +61,8 @@ export function Topbar({
           className="save-state"
           data-status={meta.syncStatus}
           title={meta.syncError}
+          role={meta.syncStatus === "error" ? "alert" : "status"}
+          aria-live="polite"
         >
           <CloudCheck size={16} weight="duotone" />
           {syncLabels[meta.syncStatus]}
@@ -80,14 +91,18 @@ export function Topbar({
           type="button"
           aria-label="Buscar en el tablero"
           title="Buscar"
+          onClick={onSearch}
         >
           <MagnifyingGlass size={20} />
         </button>
+        <button className="icon-button" type="button" aria-label="Abrir comentarios" title="Comentarios" onClick={onComments}><ChatCircleDots size={20} /></button>
+        <button className="icon-button" type="button" aria-label="Abrir notificaciones" title="Notificaciones" onClick={onNotifications}><Bell size={19} /></button>
         <button className="share-button" type="button" onClick={onShare}>
           <ShareNetwork size={17} weight="bold" />
           Compartir
         </button>
       </div>
+      {meta.versionConflict ? <div className="conflict-banner" role="alert"><span>El tablero cambió en otra sesión. La edición está pausada para evitar sobrescrituras.</span><button type="button" onClick={() => window.location.reload()}>Recargar tablero</button></div> : null}
     </header>
   );
 }

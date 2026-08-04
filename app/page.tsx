@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 type HomeProps = {
-  searchParams: Promise<{ board?: string; setup?: string }>;
+  searchParams: Promise<{ board?: string; project?: string; setup?: string }>;
 };
 
 function getInitials(name: string) {
@@ -28,12 +28,14 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const params = await searchParams;
   const requestedBoard = params.board;
+  const requestedProject = params.project;
   let query = supabase
     .from("boards")
     .select("id,name,project_id,projects!inner(name)")
     .order("created_at")
     .limit(1);
   if (requestedBoard) query = query.eq("id", requestedBoard);
+  else if (requestedProject) query = query.eq("project_id", requestedProject);
 
   const { data: board } = await query.maybeSingle();
   const displayName =
@@ -56,7 +58,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const { data: membership } = await supabase
     .from("project_members")
-    .select("role")
+    .select("role,can_comment")
     .eq("project_id", board.project_id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -75,12 +77,17 @@ export default async function Home({ searchParams }: HomeProps) {
           id: user.id,
           name: displayName,
           initials: getInitials(displayName),
+          email: user.email ?? "",
           role:
             membership?.role === "owner"
               ? "Dirección del proyecto"
               : membership?.role === "editor"
                 ? "Colaborador"
                 : "Invitado",
+        },
+        access: {
+          role: membership?.role === "owner" || membership?.role === "editor" ? membership.role : "viewer",
+          canComment: Boolean(membership?.can_comment),
         },
       }}
     />

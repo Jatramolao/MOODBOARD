@@ -57,9 +57,11 @@ function readFile(file: File): Promise<string> {
 
 export function BoardProvider({
   adapter,
+  readOnly = false,
   children,
 }: {
   adapter?: BoardAdapter | null;
+  readOnly?: boolean;
   children: React.ReactNode;
 }) {
   const [state, setState] = useState<BoardState>(cloneDefaultBoard);
@@ -67,8 +69,30 @@ export function BoardProvider({
   const [syncStatus, setSyncStatus] =
     useState<BoardMeta["syncStatus"]>("loading");
   const [syncError, setSyncError] = useState<string>();
+  const [versionConflict, setVersionConflict] = useState(false);
+  const [networkOnline, setNetworkOnline] = useState(true);
   const suppressNextSave = useRef(false);
   const lastLocalSave = useRef(0);
+
+  useEffect(() => {
+    const updateNetworkState = () => {
+      const online = navigator.onLine;
+      setNetworkOnline(online);
+      if (adapter && !online) {
+        setSyncStatus("offline");
+        setSyncError(
+          "No hay conexión. Los cambios permanecen en esta sesión y se guardarán al volver a estar en línea.",
+        );
+      }
+    };
+    updateNetworkState();
+    window.addEventListener("online", updateNetworkState);
+    window.addEventListener("offline", updateNetworkState);
+    return () => {
+      window.removeEventListener("online", updateNetworkState);
+      window.removeEventListener("offline", updateNetworkState);
+    };
+  }, [adapter]);
 
   useEffect(() => {
     let mounted = true;
@@ -142,6 +166,9 @@ export function BoardProvider({
       suppressNextSave.current = false;
       return;
     }
+    if (adapter && !networkOnline) {
+      return;
+    }
 
     const persist = async () => {
       try {
@@ -160,15 +187,17 @@ export function BoardProvider({
         }
       } catch (error) {
         setSyncStatus("error");
-        setSyncError(
-          error instanceof Error ? error.message : "No se pudo guardar.",
-        );
+        const message = error instanceof Error ? error.message : "No se pudo guardar.";
+        setSyncError(message);
+        if (message.includes("cambió en otro dispositivo") || message.includes("VERSION_CONFLICT")) {
+          setVersionConflict(true);
+        }
       }
     };
 
     const id = window.setTimeout(() => void persist(), adapter ? 520 : 180);
     return () => window.clearTimeout(id);
-  }, [adapter, hydrated, state]);
+  }, [adapter, hydrated, networkOnline, state]);
 
   const sectionOffsets = useMemo(() => {
     const offsets = new Map<string, number>();
@@ -190,6 +219,7 @@ export function BoardProvider({
   );
 
   const addSection = useCallback((rawName: string) => {
+    if (readOnly || versionConflict) return;
     const name = rawName.trim();
     if (!name) return;
     setState((current) => ({
@@ -203,9 +233,10 @@ export function BoardProvider({
         },
       ],
     }));
-  }, []);
+  }, [readOnly, versionConflict]);
 
   const addNote = useCallback(() => {
+    if (readOnly || versionConflict) return;
     setState((current) => {
       const section = current.sections[0];
       const notes = current.cards.filter(
@@ -224,9 +255,10 @@ export function BoardProvider({
       };
       return { ...current, cards: [...current.cards, card] };
     });
-  }, []);
+  }, [readOnly, versionConflict]);
 
   const addImages = useCallback(async (files: FileList | File[]) => {
+    if (readOnly || versionConflict) return;
     const allowedTypes = new Set([
       "image/jpeg",
       "image/png",
@@ -283,10 +315,11 @@ export function BoardProvider({
         return { ...current, cards: [...current.cards, ...additions] };
       });
     });
-  }, [adapter]);
+  }, [adapter, readOnly, versionConflict]);
 
   const moveCard = useCallback(
     (cardId: string, globalX: number, y: number) => {
+      if (readOnly || versionConflict) return;
       setState((current) => {
         let targetSection = current.sections[0];
         let offset = 0;
@@ -317,11 +350,12 @@ export function BoardProvider({
         };
       });
     },
-    [],
+    [readOnly, versionConflict],
   );
 
   const resizeCard = useCallback(
     (cardId: string, width: number, height: number) => {
+      if (readOnly || versionConflict) return;
       setState((current) => ({
         ...current,
         cards: current.cards.map((card) =>
@@ -335,15 +369,26 @@ export function BoardProvider({
         ),
       }));
     },
-    [],
+    [readOnly, versionConflict],
   );
 
   const removeCard = useCallback((cardId: string) => {
+    if (readOnly || versionConflict) return;
     setState((current) => ({
       ...current,
       cards: current.cards.filter((card) => card.id !== cardId),
     }));
-  }, []);
+  }, [readOnly, versionConflict]);
+
+  const updateCardText = useCallback((cardId: string, title: string, content: string) => {
+    if (readOnly || versionConflict) return;
+    setState((current) => ({
+      ...current,
+      cards: current.cards.map((card) =>
+        card.id === cardId ? { ...card, title: title.trim() || "Sin título", content } : card,
+      ),
+    }));
+  }, [readOnly, versionConflict]);
 
   const setZoom = useCallback((zoom: number) => {
     setState((current) => ({
@@ -353,6 +398,7 @@ export function BoardProvider({
   }, []);
 
   const resetBoard = useCallback(() => {
+    if (readOnly || versionConflict) return;
     const next = cloneDefaultBoard();
     if (!adapter) {
       setState(next);
@@ -374,7 +420,7 @@ export function BoardProvider({
         sectionId: sectionIds.get(card.sectionId)!,
       })),
     });
-  }, [adapter]);
+  }, [adapter, readOnly, versionConflict]);
 
   const actions = useMemo<BoardActions>(
     () => ({
@@ -384,6 +430,7 @@ export function BoardProvider({
       moveCard,
       resizeCard,
       removeCard,
+      updateCardText,
       setZoom,
       resetBoard,
     }),
@@ -393,6 +440,7 @@ export function BoardProvider({
       addSection,
       moveCard,
       removeCard,
+      updateCardText,
       resetBoard,
       resizeCard,
       setZoom,
@@ -404,6 +452,8 @@ export function BoardProvider({
       hydrated,
       syncStatus,
       syncError,
+      canEdit: !readOnly && !versionConflict,
+      versionConflict,
       worldWidth,
       sectionOffsets,
     }),
@@ -412,6 +462,8 @@ export function BoardProvider({
       sectionOffsets,
       syncError,
       syncStatus,
+      readOnly,
+      versionConflict,
       worldWidth,
     ],
   );

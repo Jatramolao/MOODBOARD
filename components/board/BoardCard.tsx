@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { DotsThree, Trash } from "@phosphor-icons/react";
+import { ChatCircleDots, Trash } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import type { BoardCard as BoardCardType } from "@/lib/board-types";
 import { useBoard } from "./BoardProvider";
@@ -32,13 +32,18 @@ export function BoardCard({
   const {
     actions,
     state: { zoom },
+    meta,
   } = useBoard();
   const elementRef = useRef<HTMLElement>(null);
   const dragRef = useRef<DragSession | null>(null);
   const resizeRef = useRef<ResizeSession | null>(null);
   const [active, setActive] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(card.title ?? "");
+  const [draftContent, setDraftContent] = useState(card.content ?? "");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const onDragStart = (event: React.PointerEvent<HTMLElement>) => {
+    if (!meta.canEdit) return;
     if (event.button !== 0 || resizeRef.current) return;
     const target = event.target as HTMLElement;
     if (target.closest("button")) return;
@@ -130,6 +135,7 @@ export function BoardCard({
     <article
       ref={elementRef}
       className={`board-card board-card-${card.type}`}
+      data-card-id={card.id}
       data-active={active || undefined}
       style={style}
       onPointerDown={onDragStart}
@@ -161,25 +167,26 @@ export function BoardCard({
       <div className="card-actions">
         <button
           type="button"
-          aria-label={`Más opciones para ${card.title ?? "elemento"}`}
-          title="Más opciones"
+          aria-label={`Comentar ${card.title ?? "elemento"}`}
+          title="Comentar"
+          onClick={(event) => {
+            event.stopPropagation();
+            window.dispatchEvent(new CustomEvent("moodboard:comment", { detail: { id: card.id, title: card.title || "Elemento sin título" } }));
+          }}
         >
-          <DotsThree size={20} weight="bold" />
+          <ChatCircleDots size={17} />
         </button>
-        <button
+        {meta.canEdit ? <button
           type="button"
           aria-label={`Eliminar ${card.title ?? "elemento"}`}
           title="Eliminar"
           onClick={(event) => {
             event.stopPropagation();
-            const confirmed = window.confirm(
-              `¿Eliminar “${card.title ?? "este elemento"}” del tablero?`,
-            );
-            if (confirmed) actions.removeCard(card.id);
+            setConfirmDelete(true);
           }}
         >
           <Trash size={16} />
-        </button>
+        </button> : null}
       </div>
 
       {card.type === "image" && card.imageUrl ? (
@@ -204,8 +211,10 @@ export function BoardCard({
 
       {card.type === "note" ? (
         <div className="note-content">
-          <strong>{card.title}</strong>
-          <p>{card.content}</p>
+          {meta.canEdit ? <>
+            <input aria-label="Título de la nota" value={draftTitle} onPointerDown={(event) => event.stopPropagation()} onChange={(event) => setDraftTitle(event.target.value)} onBlur={() => actions.updateCardText(card.id, draftTitle, draftContent)} />
+            <textarea aria-label="Contenido de la nota" value={draftContent} onPointerDown={(event) => event.stopPropagation()} onChange={(event) => setDraftContent(event.target.value)} onBlur={() => actions.updateCardText(card.id, draftTitle, draftContent)} />
+          </> : <><strong>{card.title}</strong><p>{card.content}</p></>}
           <small>— M.S.</small>
         </div>
       ) : null}
@@ -221,7 +230,7 @@ export function BoardCard({
         </div>
       ) : null}
 
-      <button
+      {meta.canEdit ? <button
         className="resize-handle"
         type="button"
         aria-label={`Redimensionar ${card.title ?? "elemento"}`}
@@ -229,7 +238,11 @@ export function BoardCard({
         onPointerMove={onResizeMove}
         onPointerUp={onResizeEnd}
         onPointerCancel={onResizeEnd}
-      />
+      /> : null}
+      {confirmDelete ? <div className="card-delete-confirm" role="dialog" aria-label={`Eliminar ${card.title ?? "elemento"}`} onPointerDown={(event) => event.stopPropagation()}>
+        <p>¿Retirar “{card.title ?? "este elemento"}” del tablero?</p>
+        <div><button type="button" onClick={() => setConfirmDelete(false)}>Cancelar</button><button type="button" onClick={() => actions.removeCard(card.id)}>Eliminar</button></div>
+      </div> : null}
     </article>
   );
 }
