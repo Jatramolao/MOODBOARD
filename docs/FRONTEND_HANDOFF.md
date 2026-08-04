@@ -4,6 +4,10 @@ Este es el punto de partida obligatorio para implementar la interfaz. El
 backend v1 ya está aplicado; frontend no debe crear tablas, inventar permisos
 ni volver al guardado de snapshots.
 
+Antes de comenzar, leer también `docs/PROJECT_STATUS.md` y
+`docs/DEVELOPMENT_WORKFLOW.md`; allí se documentan el estado compartido, la
+propiedad de cambios locales y el procedimiento de handoff/Git.
+
 ## Fuente de verdad en código
 
 - Cliente de dominio: `lib/backend/client.ts`

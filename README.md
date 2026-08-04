@@ -94,3 +94,7 @@ npm audit --omit=dev
 Consulta [docs/BACKEND.md](docs/BACKEND.md),
 [docs/OPERATIONS.md](docs/OPERATIONS.md) y el traspaso específico en
 [docs/FRONTEND_HANDOFF.md](docs/FRONTEND_HANDOFF.md).
+
+Todas las sesiones de trabajo deben comenzar por [AGENTS.md](AGENTS.md),
+[docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) y el
+[ciclo de desarrollo e integración](docs/DEVELOPMENT_WORKFLOW.md).
