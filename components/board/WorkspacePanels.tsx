@@ -118,23 +118,35 @@ function TeamPanel({ runtime }: { runtime: Extract<WorkspaceRuntime, { kind: "su
       await load();
     } catch (cause) { if (!redirectOnUnauthorized(cause)) setFeedback(frontendErrorMessage(cause, "No pudimos actualizar a esta persona.")); }
   };
+  const revokeInvitation = async (invitation: ProjectInvitation) => {
+    if (!window.confirm(`¿Revocar la invitación de ${invitation.email}?`)) return;
+    try {
+      const response = await fetch(`/api/invitations?id=${encodeURIComponent(invitation.id)}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw data.error ?? new Error("No pudimos revocar la invitación.");
+      setFeedback("Invitación revocada.");
+      await load();
+    } catch (cause) {
+      if (!redirectOnUnauthorized(cause)) setFeedback(frontendErrorMessage(cause, "No pudimos revocar la invitación."));
+    }
+  };
   return <main className="content-panel" id="board-main">
     <header className="content-panel-header"><div><span>Acceso y colaboración</span><h1>Equipo</h1><p>Administra roles, capacidad de comentar e invitaciones pendientes.</p></div><div className="usage-stat"><strong>{members.length}</strong><span>personas</span></div></header>
     {runtime.access.role === "owner" ? <form className="invite-form" onSubmit={invite}>
-      <label>Correo<input type="email" required value={email} placeholder="persona@estudio.cl" onChange={(event) => setEmail(event.target.value)} /></label>
-      <label>Rol<select value={role} onChange={(event) => setRole(event.target.value as "editor" | "viewer")}><option value="viewer">Viewer</option><option value="editor">Editor</option></select></label>
-      <label className="check-field"><input type="checkbox" checked={canComment} onChange={(event) => setCanComment(event.target.checked)} /> Puede comentar</label>
+      <label>Correo<input name="email" type="email" autoComplete="email" spellCheck={false} required value={email} placeholder="persona@estudio.cl" onChange={(event) => setEmail(event.target.value)} /></label>
+      <label>Rol<select name="role" value={role} onChange={(event) => setRole(event.target.value as "editor" | "viewer")}><option value="viewer">Viewer</option><option value="editor">Editor</option></select></label>
+      <label className="check-field"><input name="can-comment" type="checkbox" checked={canComment} onChange={(event) => setCanComment(event.target.checked)} /> Puede comentar</label>
       <button className="share-button" type="submit"><PaperPlaneTilt size={16} /> Invitar</button>
     </form> : null}
-    {manualUrl ? <div className="manual-link"><span>{manualUrl}</span><button type="button" onClick={async () => { await navigator.clipboard.writeText(manualUrl); setFeedback("Enlace copiado."); }}><Copy size={16} /> Copiar</button></div> : null}
+    {manualUrl ? <div className="manual-link"><span>{manualUrl}</span><button type="button" onClick={async () => { try { await navigator.clipboard.writeText(manualUrl); setFeedback("Enlace copiado."); } catch { setFeedback("No pudimos copiar el enlace. Selecciónalo manualmente."); } }}><Copy size={16} /> Copiar</button></div> : null}
     {feedback ? <p className="inline-feedback" role={status === "error" ? "alert" : "status"}>{feedback}</p> : null}
     {status === "loading" ? <PanelRows /> : <div className="member-list">{members.map((member) => {
       const profile = profiles.get(member.userId); const name = profile?.display_name || member.displayName || "Integrante del equipo";
       return <article className="member-row" key={member.userId}><span className="member-avatar">{name.split(/\s+/).map((part) => part[0]).slice(0, 2).join("")}</span><div><strong>{name}</strong><span>{member.userId === runtime.user.id ? "Tú" : member.canComment ? "Puede comentar" : "Solo lectura de comentarios"}</span></div>
-        {runtime.access.role === "owner" && member.role !== "owner" ? <><select aria-label={`Rol de ${name}`} value={member.role} onChange={(event) => void updateMember(member, { role: event.target.value as "editor" | "viewer" })}><option value="editor">Editor</option><option value="viewer">Viewer</option></select><label className="member-comment-toggle"><input type="checkbox" checked={member.canComment} onChange={(event) => void updateMember(member, { canComment: event.target.checked })} /> Comenta</label><button type="button" aria-label={`Quitar a ${name}`} onClick={async () => { try { await backend.removeMember(runtime.projectId, member.userId); await load(); } catch (cause) { if (!redirectOnUnauthorized(cause)) setFeedback(frontendErrorMessage(cause, "No pudimos quitar a esta persona.")); } }}><UserMinus size={17} /></button></> : <span className="role-label">{member.role}</span>}
+        {runtime.access.role === "owner" && member.role !== "owner" ? <><select aria-label={`Rol de ${name}`} value={member.role} onChange={(event) => void updateMember(member, { role: event.target.value as "editor" | "viewer" })}><option value="editor">Editor</option><option value="viewer">Viewer</option></select><label className="member-comment-toggle"><input type="checkbox" checked={member.canComment} onChange={(event) => void updateMember(member, { canComment: event.target.checked })} /> Comenta</label><button type="button" aria-label={`Quitar a ${name}`} onClick={async () => { if (!window.confirm(`¿Quitar a ${name} del proyecto?`)) return; try { await backend.removeMember(runtime.projectId, member.userId); await load(); } catch (cause) { if (!redirectOnUnauthorized(cause)) setFeedback(frontendErrorMessage(cause, "No pudimos quitar a esta persona.")); } }}><UserMinus size={17} /></button></> : <span className="role-label">{member.role}</span>}
       </article>;
     })}</div>}
-    {invites.filter((item) => item.status === "pending").length ? <section className="pending-section"><h2>Invitaciones pendientes</h2>{invites.filter((item) => item.status === "pending").map((item) => <div key={item.id}><span><strong>{item.email}</strong><small>{item.role} · vence {formatDate(item.expiresAt)}</small></span>{runtime.access.role === "owner" ? <button type="button" onClick={async () => { await fetch(`/api/invitations?id=${encodeURIComponent(item.id)}`, { method: "DELETE" }); await load(); }}>Revocar</button> : null}</div>)}</section> : null}
+    {invites.filter((item) => item.status === "pending").length ? <section className="pending-section"><h2>Invitaciones pendientes</h2>{invites.filter((item) => item.status === "pending").map((item) => <div key={item.id}><span><strong>{item.email}</strong><small>{item.role} · vence {formatDate(item.expiresAt)}</small></span>{runtime.access.role === "owner" ? <button type="button" onClick={() => void revokeInvitation(item)}>Revocar</button> : null}</div>)}</section> : null}
   </main>;
 }
 
@@ -175,7 +187,7 @@ export function UtilityDrawer({ panel, runtime, anchorItem, onClose }: { panel: 
 function SearchPanel({ onClose }: { onClose: () => void }) {
   const { state } = useBoard(); const [query, setQuery] = useState("");
   const results = useMemo(() => { const term = query.trim().toLocaleLowerCase("es"); return term ? state.cards.filter((card) => `${card.title} ${card.content}`.toLocaleLowerCase("es").includes(term)) : []; }, [query, state.cards]);
-  return <div className="drawer-content"><span className="drawer-kicker">En este tablero</span><h2>Buscar</h2><label className="search-input"><MagnifyingGlass size={18} /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Título, nota o referencia" /></label>{query && !results.length ? <SurfaceState>Sin coincidencias para “{query}”.</SurfaceState> : <div className="search-results">{results.map((card) => <button type="button" key={card.id} onClick={() => { onClose(); window.setTimeout(() => document.querySelector<HTMLElement>(`[data-card-id="${card.id}"]`)?.focus(), 30); }}><span>{card.type}</span><strong>{card.title || "Sin título"}</strong><small>{card.content || "Elemento visual"}</small></button>)}</div>}</div>;
+  return <div className="drawer-content"><span className="drawer-kicker">En este tablero</span><h2>Buscar</h2><label className="search-input"><MagnifyingGlass size={18} /><span className="visually-hidden">Buscar en el tablero</span><input name="board-search" autoComplete="off" autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Título, nota o referencia…" /></label>{query && !results.length ? <SurfaceState>Sin coincidencias para “{query}”.</SurfaceState> : <div className="search-results">{results.map((card) => <button type="button" key={card.id} onClick={() => { onClose(); window.setTimeout(() => document.querySelector<HTMLElement>(`[data-card-id="${card.id}"]`)?.focus(), 30); }}><span>{card.type}</span><strong>{card.title || "Sin título"}</strong><small>{card.content || "Elemento visual"}</small></button>)}</div>}</div>;
 }
 
 function CommentsPanel({ runtime, anchorItem, onClose }: { runtime: WorkspaceRuntime; anchorItem?: CommentAnchor | null; onClose: () => void }) {
@@ -208,7 +220,7 @@ function CommentItem({ comment, replies, names, runtime, onReply, onRefresh }: {
   return <article className="comment-item" data-resolved={Boolean(comment.resolvedAt) || undefined}>
     <header><span className="member-avatar">{(names.get(comment.userId) || "C").slice(0, 2).toUpperCase()}</span><div><strong>{names.get(comment.userId) || "Colaborador"}</strong><small>{formatDate(comment.createdAt)}{comment.editedAt ? " · editado" : ""}</small></div>{comment.resolvedAt ? <CheckCircle size={17} weight="fill" /> : null}</header>
     {comment.itemId ? <span className="comment-location">Tarjeta anclada</span> : comment.positionX != null && comment.positionY != null ? <span className="comment-location">Lienzo · {Math.round(comment.positionX)}, {Math.round(comment.positionY)}</span> : null}
-    {editing ? <textarea className="comment-edit" value={draft} maxLength={2000} onChange={(event) => setDraft(event.target.value)} /> : <p>{comment.deletedAt ? "Comentario eliminado" : comment.body}</p>}
+    {editing ? <textarea className="comment-edit" aria-label="Editar comentario" value={draft} maxLength={2000} onChange={(event) => setDraft(event.target.value)} /> : <p>{comment.deletedAt ? "Comentario eliminado" : comment.body}</p>}
     {!comment.deletedAt ? <footer>
       {editing ? <><button type="button" onClick={() => { setDraft(comment.body); setEditing(false); }}>Cancelar</button><button type="button" onClick={() => void save()}>Guardar</button></> : <>
         <button type="button" onClick={onReply}>Responder</button>
@@ -223,7 +235,7 @@ function CommentItem({ comment, replies, names, runtime, onReply, onRefresh }: {
 function CommentReply({ reply, name, isAuthor, onRefresh }: { reply: BoardComment; name: string; isAuthor: boolean; onRefresh: () => Promise<void> }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(reply.body);
-  return <div className="comment-reply"><strong>{name}</strong>{editing ? <textarea className="comment-edit" value={draft} maxLength={2000} onChange={(event) => setDraft(event.target.value)} /> : <p>{reply.deletedAt ? "Comentario eliminado" : reply.body}</p>}{isAuthor && !reply.deletedAt ? <div>{editing ? <><button type="button" onClick={() => setEditing(false)}>Cancelar</button><button type="button" onClick={async () => { await backend.updateComment(reply.id, draft.trim()); setEditing(false); await onRefresh(); }}>Guardar</button></> : <><button type="button" onClick={() => setEditing(true)}>Editar</button><button type="button" onClick={async () => { await backend.deleteComment(reply.id); await onRefresh(); }}>Eliminar</button></>}</div> : null}</div>;
+  return <div className="comment-reply"><strong>{name}</strong>{editing ? <textarea className="comment-edit" aria-label="Editar respuesta" value={draft} maxLength={2000} onChange={(event) => setDraft(event.target.value)} /> : <p>{reply.deletedAt ? "Comentario eliminado" : reply.body}</p>}{isAuthor && !reply.deletedAt ? <div>{editing ? <><button type="button" onClick={() => setEditing(false)}>Cancelar</button><button type="button" onClick={async () => { await backend.updateComment(reply.id, draft.trim()); setEditing(false); await onRefresh(); }}>Guardar</button></> : <><button type="button" onClick={() => setEditing(true)}>Editar</button><button type="button" onClick={async () => { await backend.deleteComment(reply.id); await onRefresh(); }}>Eliminar</button></>}</div> : null}</div>;
 }
 
 function NotificationsPanel({ runtime }: { runtime: WorkspaceRuntime }) {

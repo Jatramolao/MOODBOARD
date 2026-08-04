@@ -201,6 +201,18 @@ export function ShareDialog({ runtime, onClose }: { runtime: WorkspaceRuntime; o
     } catch (cause) { if (!redirectOnUnauthorized(cause)) setFeedback(frontendErrorMessage(cause, "No pudimos crear el enlace.")); }
     finally { setBusy(false); }
   };
+  const revokeLink = async (link: BoardShareLink) => {
+    if (!window.confirm("¿Revocar este enlace compartido? Dejará de funcionar inmediatamente.")) return;
+    try {
+      const response = await fetch(`/api/share-links?id=${encodeURIComponent(link.id)}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw data.error ?? new Error("No pudimos revocar el enlace.");
+      setFeedback("Enlace revocado.");
+      await loadLinks();
+    } catch (cause) {
+      if (!redirectOnUnauthorized(cause)) setFeedback(frontendErrorMessage(cause, "No pudimos revocar el enlace."));
+    }
+  };
 
   return (
     <DialogFrame
@@ -236,7 +248,7 @@ export function ShareDialog({ runtime, onClose }: { runtime: WorkspaceRuntime; o
         </button>
       </div> : null}
       {feedback ? <p className="inline-feedback" role="status">{feedback}</p> : null}
-      {links.filter((link) => !link.revokedAt).length ? <div className="share-link-list"><span>Enlaces activos</span>{links.filter((link) => !link.revokedAt).map((link) => <div key={link.id}><span><strong>{link.permission === "comment" ? "Puede comentar" : "Solo lectura"}</strong><small>{link.lastAccessedAt ? `Visto ${new Date(link.lastAccessedAt).toLocaleDateString("es-CL")}` : "Aún no abierto"}</small></span>{runtime.kind === "supabase" && runtime.access.role !== "viewer" ? <button type="button" onClick={async () => { await fetch(`/api/share-links?id=${encodeURIComponent(link.id)}`, { method: "DELETE" }); await loadLinks(); }}>Revocar</button> : null}</div>)}</div> : null}
+      {links.filter((link) => !link.revokedAt).length ? <div className="share-link-list"><span>Enlaces activos</span>{links.filter((link) => !link.revokedAt).map((link) => <div key={link.id}><span><strong>{link.permission === "comment" ? "Puede comentar" : "Solo lectura"}</strong><small>{link.lastAccessedAt ? `Visto ${new Date(link.lastAccessedAt).toLocaleDateString("es-CL")}` : "Aún no abierto"}</small></span>{runtime.kind === "supabase" && runtime.access.role !== "viewer" ? <button type="button" onClick={() => void revokeLink(link)}>Revocar</button> : null}</div>)}</div> : null}
     </DialogFrame>
   );
 }

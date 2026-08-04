@@ -125,6 +125,7 @@ export function Sidebar({
 
   const mutateBoard = async (board: BoardSummary, action: "duplicate" | "archive" | "restore") => {
     setError("");
+    if (action === "archive" && !window.confirm(`¿Archivar el tablero “${board.name}”?`)) return;
     try {
       if (action === "duplicate") await backend.duplicateBoard(board.id, `${board.name} — copia`);
       else await backend.setBoardArchived(board.id, action === "archive");
@@ -154,6 +155,7 @@ export function Sidebar({
 
   const archiveCurrentProject = async () => {
     if (runtime.kind !== "supabase") return;
+    if (!window.confirm(`¿Archivar el proyecto “${projectName}”?`)) return;
     try {
       await backend.setProjectArchived(runtime.projectId, true);
       const nextProject = projects.find((project) => project.id !== runtime.projectId && !project.archivedAt);
@@ -257,11 +259,11 @@ export function Sidebar({
 
       {editor ? (
         <div className="mini-dialog-backdrop" onMouseDown={() => setEditor(null)}>
-          <form className="mini-dialog" onSubmit={submitEditor} onMouseDown={(event) => event.stopPropagation()}>
+          <form className="mini-dialog" role="dialog" aria-modal="true" aria-labelledby="mini-dialog-title" onSubmit={submitEditor} onMouseDown={(event) => event.stopPropagation()}>
             <button className="mini-dialog-close" type="button" onClick={() => setEditor(null)} aria-label="Cerrar"><X size={17} /></button>
-            <h2>{editor.kind === "project" ? "Nuevo proyecto" : editor.kind === "edit-project" ? "Editar proyecto" : editor.kind === "board" ? "Nuevo tablero" : "Renombrar tablero"}</h2>
-            <label>Nombre<input autoFocus required maxLength={90} value={name} onChange={(event) => setName(event.target.value)} /></label>
-            {editor.kind === "project" || editor.kind === "edit-project" ? <label>Cliente <span>(opcional)</span><input maxLength={90} value={clientName} onChange={(event) => setClientName(event.target.value)} /></label> : null}
+            <h2 id="mini-dialog-title">{editor.kind === "project" ? "Nuevo proyecto" : editor.kind === "edit-project" ? "Editar proyecto" : editor.kind === "board" ? "Nuevo tablero" : "Renombrar tablero"}</h2>
+            <label>Nombre<input name="name" autoComplete="off" autoFocus required maxLength={90} value={name} onChange={(event) => setName(event.target.value)} /></label>
+            {editor.kind === "project" || editor.kind === "edit-project" ? <label>Cliente <span>(opcional)</span><input name="client" autoComplete="organization" maxLength={90} value={clientName} onChange={(event) => setClientName(event.target.value)} /></label> : null}
             {error ? <p role="alert">{error}</p> : null}
             <button className="primary-dialog-button" disabled={busy || !name.trim()}>{busy ? "Guardando…" : "Guardar"}</button>
           </form>

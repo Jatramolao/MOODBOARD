@@ -160,5 +160,19 @@ export type SharedBoardPayload = {
     width: number;
   }>;
   items: Array<Record<string, unknown>>;
-  comments: Array<Record<string, unknown>>;
+  comments: Array<{
+    id: string;
+    item_id: string | null;
+    parent_id: string | null;
+    body: string;
+    position_x: number | null;
+    position_y: number | null;
+    resolved_at: string | null;
+    created_at: string;
+    author: {
+      id: string;
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  }>;
 };
