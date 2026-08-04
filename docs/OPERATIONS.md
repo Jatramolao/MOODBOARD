@@ -23,7 +23,8 @@ Ninguna variable server-only puede usar el prefijo `NEXT_PUBLIC_`.
 
 ## Orden de despliegue
 
-1. Aplicar migraciones Supabase en orden.
+1. Aplicar migraciones Supabase en orden, incluida
+   `202608030002_fix_pgcrypto_search_path.sql`.
 2. Ejecutar `supabase/tests/backend_v1.sql` y confirmar
    `backend_v1 QA passed`.
 3. Configurar variables Vercel en Production y Preview.
@@ -63,3 +64,11 @@ npm audit --omit=dev
 La migración v1 es aditiva salvo el endurecimiento de permisos. Ante un fallo
 de interfaz, corregir el cliente; no reactivar escrituras directas ni
 `save_board_snapshot`, porque eso elimina el control de concurrencia.
+
+La migración `202608030002_fix_pgcrypto_search_path.sql` sólo ajusta el
+`search_path` de las funciones de tokens a `pg_catalog, extensions`. Su
+rollback operativo consiste en restaurar el atributo anterior, pero eso vuelve
+a romper invitaciones y enlaces compartidos en Supabase; se recomienda corregir
+hacia delante.
+
+Esta migración fue aplicada y validada en Supabase el 4 de agosto de 2026.

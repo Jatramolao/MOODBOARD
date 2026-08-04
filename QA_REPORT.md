@@ -6,6 +6,25 @@ configuración activa de Supabase.
 
 ## Resumen
 
+Actualización integración frontend/backend — 3 de agosto de 2026:
+
+- Suite integrada local: 16/16 pruebas aprobadas.
+- TypeScript, ESLint, build de producción y `git diff --check`: aprobados.
+- Dependencias de producción: 0 vulnerabilidades conocidas.
+- Autenticación sin sesión, callback inválido, invitación inválida y
+  sanitización de errores: aprobados sin errores de consola.
+- Responsive de autenticación verificado en 390, 768, 1280 y 1440 px sin
+  desborde global.
+- Workspace local: creación y edición de nota, persistencia tras recarga y
+  zoom aprobados.
+- Hallazgo corregido: las funciones de tokens no encontraban `pgcrypto` con el
+  `search_path` vigente. La migración
+  `202608030002_fix_pgcrypto_search_path.sql` fue aplicada el 4 de agosto de
+  2026 y la prueba transaccional ampliada quedó aprobada.
+
+La integración no está lista para preview o producción hasta completar los
+recorridos autenticados por rol.
+
 Actualización backend v1 — 3 de agosto de 2026:
 
 - Migración colaborativa aplicada correctamente en Supabase producción.
@@ -125,6 +144,12 @@ de prueba. Por ello requieren una última sesión manual autenticada:
 - edición simultánea real con 2 usuarios;
 - carga reanudable de un archivo mayor a 6 MB;
 - comportamiento de una cuenta `viewer`.
+- owner, editor, viewer y `can_comment=false` sobre el frontend nuevo;
+- invitación completa, revocación y expiración con usuarios reales de prueba;
+- enlace `view`, enlace `comment`, revocación y comentarios compartidos;
+- edición simultánea con dos sesiones y conflicto de versión visible;
+- errores de red y cuotas sobre recorridos autenticados;
+- responsive y accesibilidad del workspace autenticado en los cuatro anchos.
 
 ## Criterio de salida
 

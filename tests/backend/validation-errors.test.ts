@@ -49,3 +49,16 @@ test("traduce conflictos, cuotas e invitaciones a errores de dominio", () => {
   assert.equal(mapBackendError(new Error("QUOTA_EXCEEDED: project storage")).code, "QUOTA_EXCEEDED");
   assert.equal(mapBackendError({ message: "INVITATION_EXPIRED" }).code, "INVITATION_EXPIRED");
 });
+
+test("no expone detalles internos de errores desconocidos", () => {
+  const mapped = mapBackendError(
+    new Error("function digest(text, unknown) does not exist"),
+  );
+
+  assert.deepEqual(mapped, {
+    code: "UNKNOWN",
+    message: "Error inesperado del backend.",
+    retryable: false,
+    currentVersion: undefined,
+  });
+});

@@ -1,6 +1,8 @@
 # Backend colaborativo v1
 
-Estado: implementado y aplicado en Supabase el 3 de agosto de 2026.
+Estado: implementado y aplicado en Supabase. Backend v1 desplegado el 3 de
+agosto de 2026 y corrección de `pgcrypto` aplicada y verificada el 4 de agosto
+de 2026.
 
 ## Alcance
 
@@ -144,8 +146,11 @@ RATE_LIMITED              429, reintentable
 
 - Esquema inicial: `supabase/migrations/202607310001_initial_workspace.sql`
 - Backend v1: `supabase/migrations/202608030001_backend_v1.sql`
+- Corrección de `pgcrypto` para funciones con `SECURITY DEFINER`:
+  `supabase/migrations/202608030002_fix_pgcrypto_search_path.sql`
 - Integración SQL: `supabase/tests/backend_v1.sql`
 - Pruebas TypeScript: `tests/backend/*.test.ts`
 
 La prueba SQL corre dentro de una transacción y termina en `rollback`; valida
-RLS, bootstrap de proyecto, versionado e idempotencia sin dejar datos.
+RLS, bootstrap de proyecto, versionado, idempotencia, generación y resolución
+de tokens, y comentarios compartidos sin dejar datos.
