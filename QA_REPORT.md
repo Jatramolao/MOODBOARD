@@ -28,6 +28,15 @@ owner, editor, viewer y dos sesiones. Requiere iniciar sesión y disponer de las
 cuentas de prueba correspondientes; no se generaron usuarios ni correos reales
 sin autorización.
 
+Actualización autenticación local — 5 de agosto de 2026:
+
+- Se validó un acceso administrativo real de Supabase sin envío de correo.
+- `/auth` ahora consume de forma explícita la sesión implícita de un solo uso,
+  elimina access/refresh tokens del fragmento y redirige al destino seguro.
+- La sesión persiste al recargar `/`; el workspace owner, proyecto, tablero e
+  imágenes privadas cargan correctamente.
+- Suite local 16/16, TypeScript, ESLint, build y `git diff --check`: aprobados.
+
 Actualización integración frontend/backend — 3 de agosto de 2026:
 
 - Suite integrada local: 16/16 pruebas aprobadas.

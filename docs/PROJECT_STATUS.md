@@ -42,6 +42,11 @@ destructivas. El recorrido autenticado por roles sigue pendiente.
 - Endurecimiento integrado: confirmación y manejo de error al revocar enlaces
   e invitaciones, confirmación al archivar o quitar integrantes, etiquetado
   accesible de formularios y autor real en comentarios compartidos.
+- Autenticación local administrativa sin envío de correo: aprobada el 5 de
+  agosto de 2026. La pantalla `/auth` importa sesiones implícitas de un solo
+  uso, limpia los tokens de la URL y conserva la sesión tras recargar `/`.
+- Recorrido autenticado owner iniciado: workspace, proyecto, tablero, activos
+  privados y sesión persistente cargan correctamente.
 
 ## Hallazgo backend resuelto
 
@@ -60,7 +65,7 @@ No quedan bloqueos backend conocidos para continuar la integración.
 ## Responsable actual y siguiente handoff
 
 1. Integración automática y QA público completados en la rama de iteración.
-2. Completar E2E autenticado con owner, editor, viewer, dos sesiones,
+2. Completar el recorrido owner y el E2E con editor, viewer, dos sesiones,
    invitaciones, share y comentarios.
 3. Crear preview y ejecutar smoke tests sólo después de aprobar el E2E
    autenticado y recibir autorización de push.
