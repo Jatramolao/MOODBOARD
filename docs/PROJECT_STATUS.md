@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-Última actualización: 4 de agosto de 2026.
+Última actualización: 5 de agosto de 2026.
 
 ## Fase activa
 
@@ -8,8 +8,9 @@ Integración y QA conjunto del backend y frontend colaborativo v1.
 
 Backend y frontend cerraron sus handoffs. La sesión de integración trabaja en
 la rama común `codex/001-collaborative-v1` y completó la validación automática,
-el QA público y una ronda de endurecimiento de accesibilidad y acciones
-destructivas. El recorrido autenticado por roles sigue pendiente.
+el QA público, una ronda de endurecimiento de accesibilidad y acciones
+destructivas, y el ciclo autenticado de imágenes del owner. El recorrido con
+editor/viewer y dos sesiones sigue pendiente.
 
 ## Base confirmada
 
@@ -17,7 +18,7 @@ destructivas. El recorrido autenticado por roles sigue pendiente.
 - Backend v1: commit local `f6af218`.
 - Corrección backend de tokens `pgcrypto`: commit local `746acbf`.
 - Frontend colaborativo v1: commit local `fec5fc6`.
-- Estado remoto: la rama local está siete commits por delante de
+- Estado remoto: la rama local estará nueve commits por delante de
   `origin/main`; todavía no se autorizó el push.
 - Migración `202608030001_backend_v1.sql`: aplicada en Supabase.
 - Prueba SQL transaccional: aprobada.
@@ -47,6 +48,11 @@ destructivas. El recorrido autenticado por roles sigue pendiente.
   uso, limpia los tokens de la URL y conserva la sesión tras recargar `/`.
 - Recorrido autenticado owner iniciado: workspace, proyecto, tablero, activos
   privados y sesión persistente cargan correctamente.
+- Ciclo autenticado de imágenes aprobado: subir PNG, mover, reducir hasta el
+  mínimo sin deformar, persistir, retirar del tablero, borrar de Referencias y
+  comprobar la eliminación tras recargar.
+- Geometría de tarjetas cubierta por cinco regresiones nuevas; suite local
+  21/21, suite HTTP 3/3 y build de producción aprobados el 5 de agosto.
 
 ## Hallazgo backend resuelto
 

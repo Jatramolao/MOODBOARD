@@ -6,6 +6,26 @@ configuración activa de Supabase.
 
 ## Resumen
 
+Actualización interacciones de imágenes — 5 de agosto de 2026:
+
+- Se ejecutó en el workspace owner un ciclo remoto completo con un PNG QA:
+  carga, movimiento, reducción repetida, guardado, retirada del tablero,
+  eliminación de Referencias y recarga.
+- El redimensionado de imágenes conserva ahora la proporción; la previsualización
+  y el estado persistido comparten límites de 150–520 px de ancho y 110–620 px
+  de alto. Al llegar al mínimo, el caso QA quedó estable en 150 × 184,09 px.
+- Mover o ampliar una tarjeta vuelve a ajustarla dentro de los límites de su
+  sección. Un arrastre más allá del ancho total termina en la última sección.
+- El control de tamaño admite flechas y Shift + flechas, lo que permite ajuste
+  fino accesible y una regresión E2E determinista.
+- Retirar una imagen explica que el archivo permanece en Referencias. El borrado
+  definitivo de la biblioteca exige confirmación, informa éxito y aclara el
+  bloqueo cuando el activo está usado en otro tablero.
+- Los dos activos QA creados durante la reproducción fueron eliminados; no se
+  modificaron las referencias originales del usuario.
+- Suite local: 21/21; integración HTTP: 3/3; TypeScript, ESLint, build y
+  `git diff --check`: aprobados.
+
 Actualización integración/QA — 4 de agosto de 2026:
 
 - Rama de iteración: `codex/001-collaborative-v1`.
@@ -96,11 +116,13 @@ Actualización backend v1 — 3 de agosto de 2026:
 | Tablero | Crear nota | Aprobada |
 | Tablero | Mover tarjeta con teclado | Aprobada |
 | Tablero | Arrastrar tarjeta con puntero | Aprobada |
-| Tablero | Redimensionar tarjeta | Revisión manual pendiente; automatización no produjo un desplazamiento fiable |
-| Tablero | Confirmación antes de eliminar | El diálogo se abre; aceptación final pendiente de revisión manual |
+| Tablero | Redimensionar imagen y alcanzar el mínimo | Aprobada; 150 × 184,09 px sin alterar la proporción |
+| Tablero | Redimensionar con flechas y Shift + flechas | Aprobada |
+| Tablero | Confirmación antes de retirar del tablero | Aprobada; diferencia tablero/biblioteca explícita |
 | Tablero | Extender con sección “Casting” | Aprobada |
 | Imágenes | Selector múltiple y carga PNG | Aprobada |
 | Imágenes | Imagen cargada decodifica con dimensiones válidas | Aprobada |
+| Imágenes | Eliminar de Referencias y recargar | Aprobada con activo QA sin uso |
 | Persistencia | Recarga conserva secciones, tarjetas e imagen | Aprobada |
 | Compartir | Abrir y cerrar diálogo | Aprobada |
 | Compartir | Copiar enlace | Corregida; el fallo del portapapeles produce instrucción manual |
@@ -152,9 +174,10 @@ Datos observados durante el ciclo:
    el detalle del error solo está en `title`.
 7. El diálogo mueve el foco al abrir y lo restaura al cerrar, pero no contiene
    el foco dentro del modal.
-8. Al eliminar una tarjeta con imagen no se elimina su objeto de Storage. Una
-   carga múltiple parcialmente fallida también puede dejar archivos sin
-   referencia.
+8. Resuelto en la interfaz: retirar una tarjeta y eliminar su archivo son dos
+   acciones explícitas. La biblioteca confirma el borrado definitivo y explica
+   `ASSET_IN_USE`. Una carga múltiple parcialmente fallida aún puede dejar un
+   archivo sin referencia y debe tratarse en una mejora backend posterior.
 
 ### Endurecimiento recomendado
 
@@ -170,8 +193,8 @@ No se envió un magic link durante este ciclo para evitar generar correos reales
 de prueba. Por ello requieren una última sesión manual autenticada:
 
 - recepción y consumo del magic link;
-- redimensionamiento fino con mouse/touch;
-- aceptación final del borrado y persistencia remota;
+- redimensionamiento fino con mouse/touch físico; teclado, persistencia y límites
+  ya fueron aprobados;
 - edición simultánea real con 2 usuarios;
 - carga reanudable de un archivo mayor a 6 MB;
 - comportamiento de una cuenta `viewer`.
