@@ -166,11 +166,12 @@ export function BoardCanvas({
               );
             })}
 
-            {state.cards.map((card) => {
+            {state.cards.map((card, index) => {
               const offset = meta.sectionOffsets.get(card.sectionId) ?? 0;
               return (
                 <BoardCard
                   card={card}
+                  eager={card.type === "image" && index < 3}
                   globalX={offset + card.x}
                   key={card.id}
                 />

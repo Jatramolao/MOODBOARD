@@ -68,11 +68,13 @@ function AssetsPanel({ runtime, onViewChange }: { runtime: Extract<WorkspaceRunt
       <div className="asset-preview">{imageByAsset.has(asset.id) ? <Image src={imageByAsset.get(asset.id)!.url} alt={imageByAsset.get(asset.id)!.title} fill unoptimized sizes="260px" /> : <><FileImage size={30} weight="thin" /><span>{asset.mimeType.replace("image/", "").toUpperCase()}</span></>}</div>
       <div><strong title={asset.originalName}>{asset.originalName}</strong><span>{formatBytes(asset.byteSize)} · {formatDate(asset.createdAt)}</span></div>
       {runtime.access.role !== "viewer" ? <button type="button" aria-label={`Eliminar ${asset.originalName}`} onClick={async () => {
-        try { await backend.markAssetDeleted(asset.id); await load(); }
+        if (!window.confirm(`¿Eliminar definitivamente “${asset.originalName}” de Referencias? Esta acción solo es posible si ningún tablero la está usando.`)) return;
+        setMessage(""); setBlockingCards([]);
+        try { await backend.markAssetDeleted(asset.id); await load(); setMessage(`“${asset.originalName}” se eliminó de Referencias.`); }
         catch (cause) {
           const cards = state.cards.filter((card) => card.assetId === asset.id).map((card) => ({ id: card.id, title: card.title || "Elemento sin título" }));
           setBlockingCards(cards);
-          if (!redirectOnUnauthorized(cause)) setMessage(frontendErrorMessage(cause, "No pudimos eliminar el activo."));
+          if (!redirectOnUnauthorized(cause)) setMessage(`${frontendErrorMessage(cause, "No pudimos eliminar el activo.")}${cards.length ? "" : " Puede estar en uso en otro tablero del proyecto."}`);
         }
       }}><Trash size={16} /></button> : null}
     </article>)}</div> : <SurfaceState>No hay activos todavía. Agrega imágenes desde la barra del tablero.</SurfaceState>}

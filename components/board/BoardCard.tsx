@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { ChatCircleDots, Trash } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
+import { resizeCardFromPointer } from "@/lib/board-geometry";
 import type { BoardCard as BoardCardType } from "@/lib/board-types";
 import { useBoard } from "./BoardProvider";
 
@@ -25,9 +26,11 @@ type ResizeSession = {
 export function BoardCard({
   card,
   globalX,
+  eager = false,
 }: {
   card: BoardCardType;
   globalX: number;
+  eager?: boolean;
 }) {
   const {
     actions,
@@ -101,27 +104,57 @@ export function BoardCard({
     const session = resizeRef.current;
     const element = elementRef.current;
     if (!session || !element || event.pointerId !== session.pointerId) return;
-    const width =
-      session.startWidth + (event.clientX - session.startClientX) / zoom;
-    const height =
-      session.startHeight + (event.clientY - session.startClientY) / zoom;
-    element.style.width = `${Math.max(150, width)}px`;
-    element.style.height = `${Math.max(110, height)}px`;
+    const size = resizeCardFromPointer({
+      startWidth: session.startWidth,
+      startHeight: session.startHeight,
+      deltaX: (event.clientX - session.startClientX) / zoom,
+      deltaY: (event.clientY - session.startClientY) / zoom,
+      lockAspectRatio: card.type === "image",
+    });
+    element.style.width = `${size.width}px`;
+    element.style.height = `${size.height}px`;
   };
 
   const onResizeEnd = (event: React.PointerEvent<HTMLButtonElement>) => {
     const session = resizeRef.current;
     const element = elementRef.current;
     if (!session || !element || event.pointerId !== session.pointerId) return;
-    const width =
-      session.startWidth + (event.clientX - session.startClientX) / zoom;
-    const height =
-      session.startHeight + (event.clientY - session.startClientY) / zoom;
-    actions.resizeCard(card.id, width, height);
+    const size = resizeCardFromPointer({
+      startWidth: session.startWidth,
+      startHeight: session.startHeight,
+      deltaX: (event.clientX - session.startClientX) / zoom,
+      deltaY: (event.clientY - session.startClientY) / zoom,
+      lockAspectRatio: card.type === "image",
+    });
+    actions.resizeCard(card.id, size.width, size.height);
     element.style.width = "";
     element.style.height = "";
     resizeRef.current = null;
     setActive(false);
+  };
+
+  const onResizeKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!meta.canEdit) return;
+    const distance = event.shiftKey ? 40 : 12;
+    const deltas: Partial<Record<string, [number, number]>> = {
+      ArrowLeft: [-distance, 0],
+      ArrowRight: [distance, 0],
+      ArrowUp: [0, -distance],
+      ArrowDown: [0, distance],
+    };
+    const delta = deltas[event.key];
+    if (!delta) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    const size = resizeCardFromPointer({
+      startWidth: card.width,
+      startHeight: card.height,
+      deltaX: delta[0],
+      deltaY: delta[1],
+      lockAspectRatio: card.type === "image",
+    });
+    actions.resizeCard(card.id, size.width, size.height);
   };
 
   const style = {
@@ -197,9 +230,7 @@ export function BoardCard({
             alt={card.title ?? ""}
             fill
             sizes="(max-width: 900px) 45vw, 320px"
-            loading={
-              card.sectionId === "general" && card.y < 460 ? "eager" : "lazy"
-            }
+            loading={eager ? "eager" : "lazy"}
             draggable={false}
             unoptimized={
               Boolean(card.imagePath) || card.imageUrl.startsWith("data:")
@@ -234,14 +265,16 @@ export function BoardCard({
         className="resize-handle"
         type="button"
         aria-label={`Redimensionar ${card.title ?? "elemento"}`}
+        title="Arrastra o usa las flechas para ajustar el tamaño"
         onPointerDown={onResizeStart}
         onPointerMove={onResizeMove}
         onPointerUp={onResizeEnd}
         onPointerCancel={onResizeEnd}
+        onKeyDown={onResizeKeyDown}
       /> : null}
       {confirmDelete ? <div className="card-delete-confirm" role="dialog" aria-label={`Eliminar ${card.title ?? "elemento"}`} onPointerDown={(event) => event.stopPropagation()}>
-        <p>¿Retirar “{card.title ?? "este elemento"}” del tablero?</p>
-        <div><button type="button" onClick={() => setConfirmDelete(false)}>Cancelar</button><button type="button" onClick={() => actions.removeCard(card.id)}>Eliminar</button></div>
+        <p>¿Retirar “{card.title ?? "este elemento"}” del tablero?{card.type === "image" ? " El archivo seguirá disponible en Referencias." : ""}</p>
+        <div><button type="button" onClick={() => setConfirmDelete(false)}>Cancelar</button><button type="button" onClick={() => actions.removeCard(card.id)}>{card.type === "image" ? "Retirar" : "Eliminar"}</button></div>
       </div> : null}
     </article>
   );

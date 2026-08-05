@@ -15,6 +15,11 @@ import type {
   UploadedBoardAsset,
 } from "@/lib/board-adapter";
 import { cloneDefaultBoard } from "@/lib/board-data";
+import {
+  clampCardPosition,
+  clampCardSize,
+  resolveSectionAtX,
+} from "@/lib/board-geometry";
 import type {
   BoardActions,
   BoardCard,
@@ -321,30 +326,30 @@ export function BoardProvider({
     (cardId: string, globalX: number, y: number) => {
       if (readOnly || versionConflict) return;
       setState((current) => {
-        let targetSection = current.sections[0];
-        let offset = 0;
-        for (const section of current.sections) {
-          const end = offset + section.width + SECTION_GAP;
-          if (globalX < end) {
-            targetSection = section;
-            break;
-          }
-          offset = end;
-        }
+        const target = resolveSectionAtX(
+          current.sections,
+          globalX,
+          SECTION_GAP,
+        );
+        if (!target) return current;
+        const { section: targetSection, offset } = target;
 
         return {
           ...current,
           cards: current.cards.map((card) => {
             if (card.id !== cardId) return card;
-            const localX = Math.max(
-              18,
-              Math.min(globalX - offset, targetSection.width - card.width - 18),
-            );
+            const position = clampCardPosition({
+              x: globalX - offset,
+              y,
+              width: card.width,
+              height: card.height,
+              sectionWidth: targetSection.width,
+              worldHeight: WORLD_HEIGHT,
+            });
             return {
               ...card,
               sectionId: targetSection.id,
-              x: localX,
-              y: Math.max(74, Math.min(y, WORLD_HEIGHT - card.height - 26)),
+              ...position,
             };
           }),
         };
@@ -358,15 +363,23 @@ export function BoardProvider({
       if (readOnly || versionConflict) return;
       setState((current) => ({
         ...current,
-        cards: current.cards.map((card) =>
-          card.id === cardId
-            ? {
-                ...card,
-                width: Math.max(150, Math.min(width, 520)),
-                height: Math.max(110, Math.min(height, 620)),
-              }
-            : card,
-        ),
+        cards: current.cards.map((card) => {
+          if (card.id !== cardId) return card;
+          const size = clampCardSize(width, height);
+          const section = current.sections.find(
+            (item) => item.id === card.sectionId,
+          );
+          const position = section
+            ? clampCardPosition({
+                x: card.x,
+                y: card.y,
+                ...size,
+                sectionWidth: section.width,
+                worldHeight: WORLD_HEIGHT,
+              })
+            : { x: card.x, y: card.y };
+          return { ...card, ...size, ...position };
+        }),
       }));
     },
     [readOnly, versionConflict],
