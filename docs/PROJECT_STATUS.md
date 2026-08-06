@@ -53,6 +53,9 @@ editor/viewer y dos sesiones sigue pendiente.
   comprobar la eliminación tras recargar.
 - Geometría de tarjetas cubierta por cinco regresiones nuevas; suite local
   21/21, suite HTTP 3/3 y build de producción aprobados el 5 de agosto.
+- Cambio de proyecto sin contenido cruzado aparente: mientras Supabase hidrata
+  el tablero se muestra el estado neutro “Cargando proyecto” y el lienzo de
+  demostración no se monta ni descarga imágenes.
 
 ## Hallazgo backend resuelto
 

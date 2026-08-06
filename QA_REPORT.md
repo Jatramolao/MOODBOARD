@@ -25,6 +25,9 @@ Actualización interacciones de imágenes — 5 de agosto de 2026:
   modificaron las referencias originales del usuario.
 - Suite local: 21/21; integración HTTP: 3/3; TypeScript, ESLint, build y
   `git diff --check`: aprobados.
+- Se eliminó el parpadeo del tablero demostrativo al cambiar de proyecto. La
+  carga remota presenta ahora “Cargando proyecto” hasta completar la
+  hidratación, sin montar ni descargar referencias ajenas.
 
 Actualización integración/QA — 4 de agosto de 2026:
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ClockCounterClockwise, GridFour, Images, UsersThree } from "@phosphor-icons/react";
 import { createSupabaseBoardAdapter } from "@/lib/supabase/board-adapter";
 import { BoardCanvas } from "./BoardCanvas";
-import { BoardProvider } from "./BoardProvider";
+import { BoardProvider, useBoard } from "./BoardProvider";
 import { ExtendDialog, ShareDialog } from "./Dialogs";
 import { Sidebar } from "./Sidebar";
 import type { WorkspaceView } from "./Sidebar";
@@ -35,11 +35,33 @@ export type WorkspaceRuntime =
       };
     };
 
+function ProjectLoadingState() {
+  return (
+    <main
+      className="project-loading"
+      id="board-main"
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <span className="project-loading-mark" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+      <strong>Cargando proyecto</strong>
+      <p>Preparando el tablero y sus referencias…</p>
+    </main>
+  );
+}
+
 function Workspace({ runtime }: { runtime: WorkspaceRuntime }) {
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const [view, setView] = useState<WorkspaceView>("board");
   const [utility, setUtility] = useState<UtilityPanel>(null);
   const [commentAnchor, setCommentAnchor] = useState<CommentAnchor | null>(null);
+  const { meta } = useBoard();
+  const loadingRemoteBoard = runtime.kind === "supabase" && !meta.hydrated;
   const connectedPeople = useBoardPresence(
     runtime.kind === "supabase" ? runtime.boardId : undefined,
     runtime.kind === "supabase" ? runtime.user : undefined,
@@ -78,7 +100,19 @@ function Workspace({ runtime }: { runtime: WorkspaceRuntime }) {
           }
           showDemoCollaborators={runtime.kind === "local"}
         />
-        {view === "board" ? <BoardCanvas onExtend={() => setDialog("extend")} /> : <ContentPanel view={view} runtime={runtime} onViewChange={setView} />}
+        {view === "board" ? (
+          loadingRemoteBoard ? (
+            <ProjectLoadingState />
+          ) : (
+            <BoardCanvas onExtend={() => setDialog("extend")} />
+          )
+        ) : (
+          <ContentPanel
+            view={view}
+            runtime={runtime}
+            onViewChange={setView}
+          />
+        )}
       </div>
       {utility ? <UtilityDrawer panel={utility} runtime={runtime} anchorItem={commentAnchor} onClose={() => setUtility(null)} /> : null}
       {dialog === "extend" ? (
