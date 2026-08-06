@@ -1,10 +1,14 @@
 # Estado actual del proyecto
 
-Última actualización: 5 de agosto de 2026.
+Última actualización: 6 de agosto de 2026.
 
 ## Fase activa
 
 Integración y QA conjunto del backend y frontend colaborativo v1.
+
+La sesión de producto/planificación controla desde esta fecha las specs, el
+orden de paquetes, los criterios de aceptación y los ajustes. La implementación
+continúa separada por backend, frontend, integración/QA y despliegue.
 
 Backend y frontend cerraron sus handoffs. La sesión de integración trabaja en
 la rama común `codex/001-collaborative-v1` y completó la validación automática,
@@ -18,8 +22,10 @@ editor/viewer y dos sesiones sigue pendiente.
 - Backend v1: commit local `f6af218`.
 - Corrección backend de tokens `pgcrypto`: commit local `746acbf`.
 - Frontend colaborativo v1: commit local `fec5fc6`.
-- Estado remoto: la rama local estará nueve commits por delante de
-  `origin/main`; todavía no se autorizó el push.
+- Estado remoto antes de la publicación autorizada el 6 de agosto: `main`
+  estaba siete commits por delante de `origin/main` y la rama de iteración
+  agregaba nueve. El usuario autorizó actualizar `main` en GitHub; esta
+  autorización no incluye desplegar Vercel ni aprobar producción.
 - Migración `202608030001_backend_v1.sql`: aplicada en Supabase.
 - Prueba SQL transaccional: aprobada.
 - Suite backend: 8/8 pruebas aprobadas.
@@ -71,7 +77,7 @@ esquema `extensions`; la ruta compartida fallaba con un error SQL interno.
 
 No quedan bloqueos backend conocidos para continuar la integración.
 
-## Defecto pendiente para el próximo ciclo
+## Defecto activo del paquete 1
 
 - **Creación de tablero dentro de un proyecto:** el tablero se crea, pero la
   navegación posterior entra incorrectamente al flujo de creación de proyecto
@@ -84,17 +90,21 @@ No quedan bloqueos backend conocidos para continuar la integración.
 
 ## Responsable actual y siguiente handoff
 
-1. Integración automática y QA público completados en la rama de iteración.
-2. Corregir y validar la redirección posterior a crear un tablero.
-3. Completar el recorrido owner y el E2E con editor, viewer, dos sesiones,
-   invitaciones, share y comentarios.
-4. Crear preview y ejecutar smoke tests sólo después de aprobar el E2E
-   autenticado y recibir autorización de push.
+1. Aprobar la spec y plan maestro de estabilización.
+2. Ejecutar el paquete 1 y su puerta manual M1.
+3. Ejecutar secuencialmente roles/invitaciones, share/comentarios,
+   concurrencia/resiliencia y UX final, cada uno con aprobación manual.
+4. El push de respaldo a `main` fue autorizado de forma excepcional antes del
+   cierre E2E; no equivale a aprobar preview o producción.
 5. GitHub/Vercel producción quedan pendientes hasta aprobar integración.
 
-## Pendientes de entorno productivo
+## Estado y pendientes de nube
 
-- Autorizar `git push`.
+- Existe un deployment Production `Ready` en Vercel con alias
+  `moodboard-fotografo.vercel.app`, construido desde el commit `1b8ca907`.
+- El proyecto Vercel no tiene integración Git activa (`link: null`); actualizar
+  GitHub no actualiza automáticamente el servicio desplegado.
+- Decidir y autorizar separadamente un nuevo deployment de Vercel.
 - Configurar en Vercel `SUPABASE_SERVICE_ROLE_KEY` y `CRON_SECRET`.
 - Opcional: configurar `RESEND_API_KEY` y `EMAIL_FROM`; sin ellos se usa enlace
   manual de invitación.
@@ -107,3 +117,6 @@ No quedan bloqueos backend conocidos para continuar la integración.
 - Handoff frontend: `docs/FRONTEND_HANDOFF.md`
 - Operación: `docs/OPERATIONS.md`
 - QA previo: `QA_REPORT.md`
+- Spec de estabilización: `docs/specs/001-collaborative-v1-stabilization.md`
+- Plan maestro: `docs/plans/001/README.md`
+- Protocolo manual: `docs/plans/001/MANUAL_QA.md`
