@@ -18,14 +18,15 @@ editor/viewer y dos sesiones sigue pendiente.
 
 ## Base confirmada
 
-- Rama actual: `codex/001-collaborative-v1`.
+- Rama actual: `main`; la rama local `codex/001-collaborative-v1` se conserva
+  como referencia de la iteración y apunta a su commit documental de cierre.
 - Backend v1: commit local `f6af218`.
 - Corrección backend de tokens `pgcrypto`: commit local `746acbf`.
 - Frontend colaborativo v1: commit local `fec5fc6`.
-- Estado remoto antes de la publicación autorizada el 6 de agosto: `main`
-  estaba siete commits por delante de `origin/main` y la rama de iteración
-  agregaba nueve. El usuario autorizó actualizar `main` en GitHub; esta
-  autorización no incluye desplegar Vercel ni aprobar producción.
+- GitHub: `origin/main` fue actualizado el 6 de agosto hasta `343a945`,
+  incorporando los dieciséis commits locales previos y el plan documental de
+  estabilización. Esta publicación no incluye desplegar Vercel ni aprobar
+  producción.
 - Migración `202608030001_backend_v1.sql`: aplicada en Supabase.
 - Prueba SQL transaccional: aprobada.
 - Suite backend: 8/8 pruebas aprobadas.
@@ -96,10 +97,12 @@ No quedan bloqueos backend conocidos para continuar la integración.
    concurrencia/resiliencia y UX final, cada uno con aprobación manual.
 4. El push de respaldo a `main` fue autorizado de forma excepcional antes del
    cierre E2E; no equivale a aprobar preview o producción.
-5. GitHub/Vercel producción quedan pendientes hasta aprobar integración.
+5. El nuevo despliegue Vercel y la aprobación de producción quedan pendientes
+   hasta cerrar integración.
 
 ## Estado y pendientes de nube
 
+- GitHub `main` contiene el trabajo desarrollado hasta `343a945`.
 - Existe un deployment Production `Ready` en Vercel con alias
   `moodboard-fotografo.vercel.app`, construido desde el commit `1b8ca907`.
 - El proyecto Vercel no tiene integración Git activa (`link: null`); actualizar
