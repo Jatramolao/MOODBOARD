@@ -23,10 +23,8 @@ editor/viewer y dos sesiones sigue pendiente.
 - Backend v1: commit local `f6af218`.
 - Corrección backend de tokens `pgcrypto`: commit local `746acbf`.
 - Frontend colaborativo v1: commit local `fec5fc6`.
-- GitHub: `origin/main` fue actualizado el 6 de agosto hasta `343a945`,
-  incorporando los dieciséis commits locales previos y el plan documental de
-  estabilización. Esta publicación no incluye desplegar Vercel ni aprobar
-  producción.
+- GitHub: `origin/main` fue actualizado el 6 de agosto incluyendo `e3138c6`,
+  incorporando los cambios colaborativos y el disparador de despliegue.
 - Migración `202608030001_backend_v1.sql`: aplicada en Supabase.
 - Prueba SQL transaccional: aprobada.
 - Suite backend: 8/8 pruebas aprobadas.
@@ -95,23 +93,24 @@ No quedan bloqueos backend conocidos para continuar la integración.
 2. Ejecutar el paquete 1 y su puerta manual M1.
 3. Ejecutar secuencialmente roles/invitaciones, share/comentarios,
    concurrencia/resiliencia y UX final, cada uno con aprobación manual.
-4. El push de respaldo a `main` fue autorizado de forma excepcional antes del
-   cierre E2E; no equivale a aprobar preview o producción.
-5. El nuevo despliegue Vercel y la aprobación de producción quedan pendientes
-   hasta cerrar integración.
+4. El push a `main` y el despliegue Vercel fueron autorizados de forma
+   excepcional antes del cierre E2E; no equivalen a aprobar el producto.
+5. Completar los smoke tests autenticados antes de considerar producción
+   aprobada.
 
 ## Estado y pendientes de nube
 
-- GitHub `main` contiene el trabajo desarrollado hasta `343a945`.
-- Existe un deployment Production `Ready` en Vercel con alias
-  `moodboard-fotografo.vercel.app`, construido desde el commit `1b8ca907`.
-- El proyecto Vercel no tiene integración Git activa (`link: null`); actualizar
-  GitHub no actualiza automáticamente el servicio desplegado.
-- Decidir y autorizar separadamente un nuevo deployment de Vercel.
+- GitHub `main` contiene el trabajo desarrollado, incluido `e3138c6`.
+- La integración Git de Vercel está activa mediante `.vercel/repo.json` para
+  `Jatramolao/MOODBOARD` y la rama `main` despliega a producción.
+- El deployment Production generado desde `e3138c6` está `Ready` con alias
+  `moodboard-fotografo.vercel.app`.
+- Smoke público aprobado: `/` responde `307` hacia `/auth`.
 - Configurar en Vercel `SUPABASE_SERVICE_ROLE_KEY` y `CRON_SECRET`.
 - Opcional: configurar `RESEND_API_KEY` y `EMAIL_FROM`; sin ellos se usa enlace
   manual de invitación.
-- Ejecutar smoke tests después del despliegue conjunto backend + frontend.
+- Completar smoke tests autenticados del despliegue conjunto backend +
+  frontend.
 
 ## Referencias
 
