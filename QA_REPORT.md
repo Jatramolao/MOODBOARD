@@ -122,6 +122,7 @@ Actualización backend v1 — 3 de agosto de 2026:
 | Tablero | Redimensionar imagen y alcanzar el mínimo | Aprobada; 150 × 184,09 px sin alterar la proporción |
 | Tablero | Redimensionar con flechas y Shift + flechas | Aprobada |
 | Tablero | Confirmación antes de retirar del tablero | Aprobada; diferencia tablero/biblioteca explícita |
+| Tablero | Crear tablero dentro del proyecto y abrirlo | Fallida; crea el tablero pero deriva al flujo de creación de proyecto |
 | Tablero | Extender con sección “Casting” | Aprobada |
 | Imágenes | Selector múltiple y carga PNG | Aprobada |
 | Imágenes | Imagen cargada decodifica con dimensiones válidas | Aprobada |
@@ -152,6 +153,14 @@ Datos observados durante el ciclo:
   conserva `SECURITY INVOKER`.
 
 ## Hallazgos
+
+### Pendiente del próximo ciclo
+
+1. Al crear un tablero desde un proyecto existente, el backend completa la
+   creación pero la navegación posterior no consume correctamente el
+   identificador del nuevo tablero y deriva al flujo de creación de proyecto.
+   Debe conservar el proyecto actual, abrir el tablero creado y cubrir el caso
+   para evitar `board=undefined`.
 
 ### Alta prioridad (resuelta en backend v1)
 

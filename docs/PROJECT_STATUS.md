@@ -71,14 +71,26 @@ esquema `extensions`; la ruta compartida fallaba con un error SQL interno.
 
 No quedan bloqueos backend conocidos para continuar la integración.
 
+## Defecto pendiente para el próximo ciclo
+
+- **Creación de tablero dentro de un proyecto:** el tablero se crea, pero la
+  navegación posterior entra incorrectamente al flujo de creación de proyecto
+  en vez de abrir el nuevo tablero dentro del proyecto actual.
+- Criterio de aceptación: al confirmar “Nuevo tablero”, usar el `board_id`
+  devuelto por el backend, conservar el proyecto activo y navegar directamente
+  a `/?board=<nuevo-board-id>` sin invocar ni mostrar el flujo de proyecto.
+- Regresión requerida: comprobar creación desde un proyecto con y sin otros
+  tableros, persistencia después de recargar y ausencia de `board=undefined`.
+
 ## Responsable actual y siguiente handoff
 
 1. Integración automática y QA público completados en la rama de iteración.
-2. Completar el recorrido owner y el E2E con editor, viewer, dos sesiones,
+2. Corregir y validar la redirección posterior a crear un tablero.
+3. Completar el recorrido owner y el E2E con editor, viewer, dos sesiones,
    invitaciones, share y comentarios.
-3. Crear preview y ejecutar smoke tests sólo después de aprobar el E2E
+4. Crear preview y ejecutar smoke tests sólo después de aprobar el E2E
    autenticado y recibir autorización de push.
-4. GitHub/Vercel producción quedan pendientes hasta aprobar integración.
+5. GitHub/Vercel producción quedan pendientes hasta aprobar integración.
 
 ## Pendientes de entorno productivo
 
