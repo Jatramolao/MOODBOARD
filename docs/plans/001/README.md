@@ -23,7 +23,8 @@ de producto.
 | Orden | Paquete | Sesión primaria | Puerta de salida |
 |---|---|---|---|
 | 0 | Preparación y datos de prueba | Planificación + integración | Entorno y cuentas definidos |
-| 1 | Creación y apertura de tableros | Frontend → integración | Manual M1 aprobado |
+| 1A | Creación y apertura de tableros | Frontend → integración | Manual M1A aprobado |
+| 1B | Primera imagen y consistencia de activos | Backend/Frontend → integración | Manual M1B aprobado |
 | 2 | Roles, equipo e invitaciones | Integración; backend/frontend sólo por hallazgo | Manual M2 aprobado |
 | 3 | Compartir y comentarios | Integración; backend/frontend sólo por hallazgo | Manual M3 aprobado |
 | 4 | Concurrencia y resiliencia | Integración | Manual M4 aprobado |
@@ -79,6 +80,7 @@ La falta de cuentas no autoriza crear usuarios o enviar correos reales.
 ## Archivos de ejecución
 
 - `01-board-creation.md`
+- `01b-first-image-asset-consistency.md`
 - `02-roles-and-invitations.md`
 - `03-sharing-and-comments.md`
 - `04-concurrency-and-resilience.md`

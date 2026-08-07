@@ -14,7 +14,7 @@ backend.
    válido. Añadir regresiones para ambas variantes y `board=undefined`.
 3. **Backend:** participa únicamente si la respuesta real incumple el contrato.
 4. **Integración:** ejecutar suites, recarga y cambio entre tableros.
-5. **Usuario:** ejecutar la prueba manual M1 y aprobar o devolver.
+5. **Usuario:** ejecutar la prueba manual M1A y aprobar o devolver.
 
 ## Casos obligatorios
 
@@ -34,5 +34,5 @@ backend.
 
 ## Salida
 
-Regresión automática, validación mínima, prueba manual M1 aprobada, commit
+Regresión automática, validación mínima, prueba manual M1A aprobada, commit
 pequeño y `PROJECT_STATUS` actualizado.

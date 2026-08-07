@@ -36,7 +36,7 @@ Hallazgos nuevos:
 Datos QA eliminados al terminar: sí | no | no aplica
 ```
 
-## M1 — Tableros
+## M1A — Tableros
 
 1. Entrar como owner a un proyecto existente.
 2. Crear un tablero y confirmar que abre inmediatamente.
@@ -48,6 +48,25 @@ Datos QA eliminados al terminar: sí | no | no aplica
 
 Aprobar si no aparece el flujo de crear proyecto, no existe
 `board=undefined` y la recarga conserva el destino.
+
+## M1B — Primera imagen y Referencias
+
+1. Abrir un tablero nuevo y vacío; confirmar versión 1 y estado Guardado.
+2. Subir una sola imagen QA y esperar el estado Guardado antes de navegar.
+3. Recargar y confirmar que la tarjeta y la referencia siguen presentes una
+   sola vez.
+4. Intentar eliminar la referencia mientras la tarjeta esté activa: debe
+   bloquearse con `ASSET_IN_USE` y localizar la tarjeta.
+5. Retirar la tarjeta del tablero, esperar Guardado y recargar: la referencia
+   debe permanecer y la tarjeta no debe reaparecer.
+6. Eliminar entonces la referencia, recargar Referencias y confirmar que ya no
+   aparece.
+7. Repetir una carga con red interrumpida o error controlado: debe mostrarse la
+   causa útil y no quedar una tarjeta falsamente guardada ni un activo huérfano.
+
+Aprobar si cada acción tiene un único efecto, la versión sólo avanza con
+operaciones persistidas y tablero/Referencias permanecen coherentes después de
+cada recarga.
 
 ## M2 — Roles e invitaciones
 

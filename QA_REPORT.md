@@ -6,6 +6,26 @@ configuración activa de Supabase.
 
 ## Resumen
 
+Actualización hallazgos manuales de producción — 7 de agosto de 2026:
+
+- La creación de tablero vuelve a reproducir la redirección al setup. La causa
+  está aislada: `create_board` devuelve un UUID escalar y `Sidebar` intenta leer
+  `board_id`, produciendo `/?board=undefined`.
+- La primera imagen de un tablero vacío crea correctamente el activo `ready` y
+  muestra la tarjeta, pero termina en “Error al guardar”. El tablero observado
+  quedó en versión 1, sin elemento persistido y sin lote de operaciones.
+- El error PostgREST real se pierde en `BoardProvider`, que sólo conserva
+  `error.message` cuando el objeto es una instancia nativa de `Error`.
+- Esto explica parte de la inconsistencia de eliminación: el activo sin item
+  persistido puede eliminarse de Referencias aunque la tarjeta continúe en
+  memoria. En el flujo sano, retirar una tarjeta y conservar la referencia es
+  deliberado; borrar la referencia activa debe responder `ASSET_IN_USE`.
+- La cobertura SQL vigente sólo prueba `board.update`; debe agregarse una
+  regresión `item.create` con `asset_id` antes de asignar la corrección a una
+  capa.
+- La referencia QA creada durante la reproducción fue dada de baja
+  lógicamente; no se modificaron referencias anteriores.
+
 Actualización interacciones de imágenes — 5 de agosto de 2026:
 
 - Se ejecutó en el workspace owner un ciclo remoto completo con un PNG QA:
@@ -125,6 +145,8 @@ Actualización backend v1 — 3 de agosto de 2026:
 | Tablero | Crear tablero dentro del proyecto y abrirlo | Fallida; crea el tablero pero deriva al flujo de creación de proyecto |
 | Tablero | Extender con sección “Casting” | Aprobada |
 | Imágenes | Selector múltiple y carga PNG | Aprobada |
+| Imágenes | Primera carga en tablero vacío | Fallida; activo `ready`, tarjeta no persistida y versión sin cambio |
+| Imágenes | Coherencia tarjeta/Referencia tras error | Fallida; activo sin item persistido |
 | Imágenes | Imagen cargada decodifica con dimensiones válidas | Aprobada |
 | Imágenes | Eliminar de Referencias y recargar | Aprobada con activo QA sin uso |
 | Persistencia | Recarga conserva secciones, tarjetas e imagen | Aprobada |

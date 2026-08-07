@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-Última actualización: 6 de agosto de 2026.
+Última actualización: 7 de agosto de 2026.
 
 ## Fase activa
 
@@ -61,6 +61,9 @@ editor/viewer y dos sesiones sigue pendiente.
 - Cambio de proyecto sin contenido cruzado aparente: mientras Supabase hidrata
   el tablero se muestra el estado neutro “Cargando proyecto” y el lienzo de
   demostración no se monta ni descarga imágenes.
+- Workspace conciliado el 7 de agosto: copias redundantes con sufijo `2`
+  retiradas, paquete 1B incorporado a la planificación canónica y todos los
+  documentos activos listos para seguimiento Git.
 
 ## Hallazgo backend resuelto
 
@@ -74,9 +77,10 @@ esquema `extensions`; la ruta compartida fallaba con un error SQL interno.
   crear un comentario compartido.
 - Los errores desconocidos ahora se normalizan sin filtrar detalles SQL.
 
-No quedan bloqueos backend conocidos para continuar la integración.
+La corrección de tokens no deja bloqueos. El nuevo paquete 1B debe determinar
+si `item.create + asset_id` introduce un bloqueo backend distinto.
 
-## Defecto activo del paquete 1
+## Defectos activos de los paquetes 1A y 1B
 
 - **Creación de tablero dentro de un proyecto:** el tablero se crea, pero la
   navegación posterior entra incorrectamente al flujo de creación de proyecto
@@ -87,15 +91,28 @@ No quedan bloqueos backend conocidos para continuar la integración.
 - Regresión requerida: comprobar creación desde un proyecto con y sin otros
   tableros, persistencia después de recargar y ausencia de `board=undefined`.
 
+- **Primera imagen en un tablero vacío:** reproducida en Vercel el 7 de agosto.
+  `register_asset` deja el activo `ready` y la tarjeta aparece en memoria, pero
+  el tablero permanece en versión 1, sin `board_items` ni lote de operaciones.
+  El cliente muestra únicamente “No se pudo guardar” y deja una referencia sin
+  elemento persistido.
+- Relación con eliminación: retirar una tarjeta y conservar Referencias es el
+  contrato esperado. La inconsistencia aparece cuando el elemento nunca se
+  guardó; entonces backend permite eliminar el activo por no detectar uso,
+  mientras la tarjeta todavía existe en el estado local.
+- Siguiente diagnóstico: cubrir primero `item.create + asset_id` en la prueba
+  SQL transaccional. Sólo después se decide si corrige backend o frontend.
+
 ## Responsable actual y siguiente handoff
 
 1. Aprobar la spec y plan maestro de estabilización.
-2. Ejecutar el paquete 1 y su puerta manual M1.
-3. Ejecutar secuencialmente roles/invitaciones, share/comentarios,
+2. Ejecutar el paquete 1A y su puerta manual M1A.
+3. Ejecutar el paquete 1B y su puerta manual M1B.
+4. Ejecutar secuencialmente roles/invitaciones, share/comentarios,
    concurrencia/resiliencia y UX final, cada uno con aprobación manual.
-4. El push a `main` y el despliegue Vercel fueron autorizados de forma
+5. El push a `main` y el despliegue Vercel fueron autorizados de forma
    excepcional antes del cierre E2E; no equivalen a aprobar el producto.
-5. Completar los smoke tests autenticados antes de considerar producción
+6. Completar los smoke tests autenticados antes de considerar producción
    aprobada.
 
 ## Estado y pendientes de nube

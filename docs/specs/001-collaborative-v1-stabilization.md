@@ -10,9 +10,11 @@ Rama: `codex/001-collaborative-v1`.
 
 El backend y el frontend colaborativo v1 están implementados, pero la
 iteración todavía no tiene evidencia suficiente para declararse lista para
-preview. Existe un defecto confirmado al crear tableros y faltan recorridos
-reales con varios roles, dos sesiones, invitaciones, enlaces compartidos,
-comentarios, errores y estados límite.
+preview. Existen defectos confirmados al abrir un tablero recién creado y al
+persistir la primera imagen de un tablero vacío. El segundo puede dejar un
+activo listo en Referencias sin el elemento correspondiente. También faltan
+recorridos reales con varios roles, dos sesiones, invitaciones, enlaces
+compartidos, comentarios, errores y estados límite.
 
 ## Objetivo
 
@@ -32,13 +34,14 @@ manual antes de habilitar el siguiente paquete.
 ## Alcance incluido
 
 1. Crear un tablero dentro del proyecto activo y abrirlo correctamente.
-2. Validar permisos de owner, editor, viewer y `can_comment=false`.
-3. Validar invitación, aceptación, expiración y revocación.
-4. Validar enlaces `view`, `comment` y revocación.
-5. Validar comentarios, respuestas, resolución y autoría.
-6. Validar dos sesiones, conflicto de versión y persistencia.
-7. Validar errores de red, cuotas, responsive, accesibilidad y consola.
-8. Preparar preview, PR, smoke test y decisión de publicación.
+2. Persistir la primera imagen y mantener coherentes tablero, activo y errores.
+3. Validar permisos de owner, editor, viewer y `can_comment=false`.
+4. Validar invitación, aceptación, expiración y revocación.
+5. Validar enlaces `view`, `comment` y revocación.
+6. Validar comentarios, respuestas, resolución y autoría.
+7. Validar dos sesiones, conflicto de versión y persistencia.
+8. Validar errores de red, cuotas, responsive, accesibilidad y consola.
+9. Preparar preview, PR, smoke test y decisión de publicación.
 
 ## Fuera de alcance
 
@@ -56,6 +59,8 @@ manual antes de habilitar el siguiente paquete.
 - Una corrección, una capa y un commit acotado por defecto.
 - Si un hallazgo exige otra capa, detener el paquete y crear un handoff.
 - No comenzar un paquete nuevo con cambios sin commit del paquete anterior.
+- Retirar una tarjeta del tablero conserva el archivo en Referencias. Eliminar
+  una referencia sólo se permite después de que ningún tablero la use.
 
 ## Criterios de aceptación globales
 
