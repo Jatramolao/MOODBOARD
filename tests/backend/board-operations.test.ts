@@ -60,6 +60,19 @@ test("elimina primero por identidad lógica y conserva referencias de asset", ()
   assert.equal(cardPayload(initial.cards[0]).source_url, null);
 });
 
+test("omite la paleta ausente y conserva una paleta explícita", () => {
+  const imagePayload = cardPayload(initial.cards[0]);
+  assert.equal("colors" in imagePayload, false);
+
+  const palettePayload = cardPayload({
+    ...initial.cards[0],
+    id: "card-palette",
+    type: "palette",
+    colors: ["#151515", "#f4efe6"],
+  });
+  assert.deepEqual(palettePayload.colors, ["#151515", "#f4efe6"]);
+});
+
 test("cloneBoard crea una copia profunda", () => {
   const copy = cloneBoard(initial);
   copy.sections[0].name = "Cambio local";

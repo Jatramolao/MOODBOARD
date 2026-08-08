@@ -28,7 +28,7 @@ export function cardPayload(card: BoardCard) {
     content: card.content ?? null,
     image_path: card.imagePath ?? null,
     source_url: card.imagePath ? null : card.imageUrl ?? null,
-    colors: card.colors ?? null,
+    ...(card.colors ? { colors: card.colors } : {}),
     asset_id: card.assetId ?? null,
   };
 }
