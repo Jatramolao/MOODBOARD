@@ -6,6 +6,35 @@ configuración activa de Supabase.
 
 ## Resumen
 
+Actualización integración de handoffs 1A/1B — 8 de agosto de 2026:
+
+- Backend y frontend quedaron reunidos en `codex/001-first-image-backend` hasta
+  `71064d6`.
+- Suite local integrada: 28/28; suite HTTP: 3/3; TypeScript, ESLint, build de
+  producción y `git diff --check`: aprobados.
+- La suite HTTP se ejecutó contra `localhost:3001` porque el puerto 3000 estaba
+  ocupado por otro workspace local; las respuestas de esta aplicación cumplen
+  los contratos de callback, share e identificadores inválidos.
+- La puerta M1B permanece pendiente de repetición: la migración
+  `202608080001_validate_board_item_assets.sql` todavía no está aplicada en
+  Supabase.
+
+Actualización prueba manual M1B en producción — 8 de agosto de 2026:
+
+- M1B **fallida** en el tablero
+  `a3afca8e-ab7b-4232-a07f-a649e8b5115a` de Vercel.
+- La primera imagen volvió a terminar en “Error al guardar”. La consulta de
+  Supabase confirmó que el tablero permaneció en versión 1, con cero
+  `board_items` y cero lotes en `board_operation_batches`.
+- El activo `17ea30a4-0fdd-477d-8ba1-80b78d0eee89` sí alcanzó el estado
+  `ready` y después fue eliminado desde Referencias. Los eventos registrados
+  fueron `asset.ready` y `asset.deleted`; no hubo operación de tablero.
+- La eliminación no retiró un elemento persistido: el elemento visual sólo
+  había existido en memoria. Por ello `ASSET_IN_USE` no podía activarse y la
+  referencia quedó con estado `deleted`.
+- No se avanza al siguiente flujo de specs. El paquete 1B debe pasar primero
+  por backend, frontend e integración y repetir M1B en un tablero vacío.
+
 Actualización hallazgos manuales de producción — 7 de agosto de 2026:
 
 - La creación de tablero vuelve a reproducir la redirección al setup. La causa
@@ -145,8 +174,8 @@ Actualización backend v1 — 3 de agosto de 2026:
 | Tablero | Crear tablero dentro del proyecto y abrirlo | Fallida; crea el tablero pero deriva al flujo de creación de proyecto |
 | Tablero | Extender con sección “Casting” | Aprobada |
 | Imágenes | Selector múltiple y carga PNG | Aprobada |
-| Imágenes | Primera carga en tablero vacío | Fallida; activo `ready`, tarjeta no persistida y versión sin cambio |
-| Imágenes | Coherencia tarjeta/Referencia tras error | Fallida; activo sin item persistido |
+| Imágenes | Primera carga en tablero vacío | M1B fallida el 8 de agosto; activo `ready`, tarjeta no persistida y versión sin cambio |
+| Imágenes | Coherencia tarjeta/Referencia tras error | Fallida; la referencia pudo eliminarse porque no existía un item persistido |
 | Imágenes | Imagen cargada decodifica con dimensiones válidas | Aprobada |
 | Imágenes | Eliminar de Referencias y recargar | Aprobada con activo QA sin uso |
 | Persistencia | Recarga conserva secciones, tarjetas e imagen | Aprobada |

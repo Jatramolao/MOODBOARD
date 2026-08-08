@@ -19,6 +19,24 @@ Un error no puede quedar reducido al mensaje genérico “No se pudo guardar”.
 - El activo QA creado para la reproducción fue dado de baja lógicamente; las
   referencias anteriores no fueron modificadas.
 
+## Resultado de puerta manual M1B — 8 de agosto de 2026
+
+Estado: **fallida / bloqueante**.
+
+- Entorno: producción Vercel, tablero vacío
+  `a3afca8e-ab7b-4232-a07f-a649e8b5115a`.
+- La carga volvió a mostrar “Error al guardar”.
+- Estado remoto posterior: tablero versión 1, cero `board_items` y cero lotes
+  en `board_operation_batches`.
+- El activo `17ea30a4-0fdd-477d-8ba1-80b78d0eee89` fue registrado como
+  `ready` y luego eliminado desde Referencias; Supabase conserva los eventos
+  `asset.ready` y `asset.deleted`.
+- La eliminación fue permitida porque nunca existió un elemento persistido que
+  activara `ASSET_IN_USE`. Cualquier tarjeta todavía visible pertenecía sólo al
+  estado local posterior al fallo.
+- Decisión: no iniciar el siguiente flujo de specs hasta implementar el
+  paquete, repetir la validación automática y aprobar nuevamente M1B.
+
 ## Hipótesis de trabajo
 
 El registro del archivo y la creación del elemento son pasos separados. La

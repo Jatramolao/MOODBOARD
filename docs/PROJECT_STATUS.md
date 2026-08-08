@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-Última actualización: 7 de agosto de 2026.
+Última actualización: 8 de agosto de 2026.
 
 ## Fase activa
 
@@ -16,15 +16,22 @@ el QA público, una ronda de endurecimiento de accesibilidad y acciones
 destructivas, y el ciclo autenticado de imágenes del owner. El recorrido con
 editor/viewer y dos sesiones sigue pendiente.
 
+La puerta manual M1B fue ejecutada nuevamente en producción el 8 de agosto y
+quedó **fallida**. No se autoriza avanzar al siguiente flujo de specs hasta
+corregir y volver a aprobar la primera imagen de un tablero vacío.
+
 ## Base confirmada
 
-- Rama actual: `main`; la rama local `codex/001-collaborative-v1` se conserva
-  como referencia de la iteración y apunta a su commit documental de cierre.
+- Rama actual: `codex/001-first-image-backend`, con los handoffs backend y
+  frontend integrados hasta `71064d6`. `main`/`origin/main` permanecen como
+  base publicada en `55b707c`.
 - Backend v1: commit local `f6af218`.
 - Corrección backend de tokens `pgcrypto`: commit local `746acbf`.
 - Frontend colaborativo v1: commit local `fec5fc6`.
-- GitHub: `origin/main` fue actualizado el 6 de agosto incluyendo `e3138c6`,
-  incorporando los cambios colaborativos y el disparador de despliegue.
+- Corrección frontend M1A: commit local `5f2b2f9`.
+- Compensación frontend 1B: commit local `4a4fdac`.
+- GitHub: `origin/main` contiene los cambios colaborativos y la planificación
+  canónica hasta `55b707c`; los ajustes 1A/1B siguen sólo en la rama activa.
 - Migración `202608030001_backend_v1.sql`: aplicada en Supabase.
 - Prueba SQL transaccional: aprobada.
 - Suite backend: 8/8 pruebas aprobadas.
@@ -64,6 +71,10 @@ editor/viewer y dos sesiones sigue pendiente.
 - Workspace conciliado el 7 de agosto: copias redundantes con sufijo `2`
   retiradas, paquete 1B incorporado a la planificación canónica y todos los
   documentos activos listos para seguimiento Git.
+- Producción observada para M1B: tablero
+  `a3afca8e-ab7b-4232-a07f-a649e8b5115a` en versión 1, sin `board_items` y sin
+  lotes de operaciones. El activo creado llegó a `ready` y luego a `deleted`,
+  con eventos `asset.ready` y `asset.deleted`.
 
 ## Hallazgo backend resuelto
 
@@ -100,19 +111,61 @@ si `item.create + asset_id` introduce un bloqueo backend distinto.
   contrato esperado. La inconsistencia aparece cuando el elemento nunca se
   guardó; entonces backend permite eliminar el activo por no detectar uso,
   mientras la tarjeta todavía existe en el estado local.
+- Revalidación manual M1B del 8 de agosto: fallida por la misma secuencia. La
+  eliminación de Referencias no borró un `board_item` en Supabase porque nunca
+  fue creado; eliminó el activo que había quedado desacoplado del estado local.
 - Siguiente diagnóstico: cubrir primero `item.create + asset_id` en la prueba
   SQL transaccional. Sólo después se decide si corrige backend o frontend.
 
+### Ajuste backend 1B preparado localmente
+
+- Causa demostrada por inspección del contrato: `colors: null` llegaba como
+  JSONB `null`, valor incompatible con la restricción de `board_items`.
+- Rama activa: `codex/001-first-image-backend`.
+- Migración preparada: `202608080001_validate_board_item_assets.sql`; normaliza
+  la paleta y valida estado, proyecto, tablero y ruta del activo.
+- Cliente corregido para omitir una paleta ausente.
+- Regresión SQL ampliada para primera imagen, idempotencia, activo ajeno,
+  `ASSET_IN_USE` y borrado posterior a `item.delete`.
+- Validación local aprobada: backend/frontend 22/22, integración HTTP 3/3 y
+  build de producción. La migración y la prueba SQL aún no se aplican en
+  Supabase porque requieren autorización y sesión autenticada.
+
+### Ajustes frontend 1A y 1B completados localmente
+
+- `create_board` consume ahora su UUID escalar y nunca navega con
+  `board=undefined`.
+- Los errores de `apply_board_operations` conservan su código de dominio y una
+  causa útil sin exponer contexto SQL interno.
+- Una creación de item fallida retira la tarjeta local y da de baja el activo;
+  las cargas múltiples parciales también se compensan.
+- Si la baja responde `ASSET_IN_USE`, el frontend conserva el activo y recarga
+  el tablero remoto para no borrar una operación ya confirmada.
+- Validación frontend aprobada: suite local 28/28, integración HTTP 3/3,
+  TypeScript, ESLint, build y `git diff --check`.
+
+### Revalidación de integración
+
+- Handoffs backend/frontend reunidos hasta `71064d6`.
+- Integración independiente aprobada el 8 de agosto: suite local 28/28, HTTP
+  3/3 contra `localhost:3001`, TypeScript, ESLint, build y
+  `git diff --check`.
+- El puerto 3000 pertenece a otro workspace local; no se detuvo ni modificó
+  ese proceso durante la validación.
+- Único bloqueo de M1B: aplicar y verificar la migración 1B en Supabase antes
+  de repetir el recorrido manual.
+
 ## Responsable actual y siguiente handoff
 
-1. Aprobar la spec y plan maestro de estabilización.
-2. Ejecutar el paquete 1A y su puerta manual M1A.
-3. Ejecutar el paquete 1B y su puerta manual M1B.
-4. Ejecutar secuencialmente roles/invitaciones, share/comentarios,
+1. Aplicar la migración 1B en Supabase y ejecutar la prueba SQL transaccional.
+2. Frontend completó M1A y la compensación 1B en `5f2b2f9` y `4a4fdac`.
+3. Integración debe repetir regresiones automáticas y la puerta manual M1B.
+4. Confirmar y cerrar M1A de creación/navegación de tablero.
+5. Ejecutar secuencialmente roles/invitaciones, share/comentarios,
    concurrencia/resiliencia y UX final, cada uno con aprobación manual.
-5. El push a `main` y el despliegue Vercel fueron autorizados de forma
+6. El push a `main` y el despliegue Vercel fueron autorizados de forma
    excepcional antes del cierre E2E; no equivalen a aprobar el producto.
-6. Completar los smoke tests autenticados antes de considerar producción
+7. Completar los smoke tests autenticados antes de considerar producción
    aprobada.
 
 ## Estado y pendientes de nube
