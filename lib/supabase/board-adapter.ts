@@ -15,6 +15,7 @@ import {
   buildBoardOperations,
   cloneBoard,
 } from "@/lib/backend/board-operations";
+import { mapBackendError } from "@/lib/backend/errors";
 import { createClient } from "./client";
 import { getSupabaseEnv } from "./env";
 
@@ -118,7 +119,10 @@ async function uploadAsset(
   const { data, error } = await client.storage
     .from(ASSET_BUCKET)
     .createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
-  if (error) throw error;
+  if (error) {
+    await client.storage.from(ASSET_BUCKET).remove([path]);
+    throw error;
+  }
   return { imagePath: path, imageUrl: data.signedUrl };
 }
 
@@ -132,6 +136,44 @@ export function createSupabaseBoardAdapter({
   let boardVersion = 1;
   let lastSavedBoard: BoardState | null = null;
   let saveQueue: Promise<void> = Promise.resolve();
+
+  const discardUploadedAssets: BoardAdapter["discardUploadedAssets"] = async (
+    assets,
+  ) => {
+    const results = await Promise.all(
+      assets.map(async (asset) => {
+        if (!asset.assetId) return { asset, outcome: "failed" as const };
+        const { error } = await client.rpc("mark_asset_deleted", {
+          p_asset_id: asset.assetId,
+        });
+        if (!error) return { asset, outcome: "discarded" as const };
+        const mapped = mapBackendError(error);
+        if (mapped.code === "NOT_FOUND") {
+          return { asset, outcome: "discarded" as const };
+        }
+        if (mapped.code === "ASSET_IN_USE") {
+          return { asset, outcome: "retained" as const };
+        }
+        return { asset, outcome: "failed" as const };
+      }),
+    );
+    const discarded = results.filter((result) => result.outcome === "discarded");
+    const paths = discarded
+      .map(({ asset }) => asset.imagePath)
+      .filter((path): path is string => Boolean(path));
+    if (paths.length) {
+      await client.storage.from(ASSET_BUCKET).remove(paths);
+    }
+    return {
+      discardedAssetIds: discarded.map(({ asset }) => asset.assetId!),
+      retainedAssetIds: results
+        .filter((result) => result.outcome === "retained")
+        .map(({ asset }) => asset.assetId!),
+      failedAssetIds: results
+        .filter((result) => result.outcome === "failed")
+        .flatMap(({ asset }) => asset.assetId ? [asset.assetId] : []),
+    };
+  };
 
   return {
     kind: "supabase",
@@ -224,14 +266,7 @@ export function createSupabaseBoardAdapter({
           p_operation_id: crypto.randomUUID(),
           p_operations: operations,
         });
-        if (error) {
-          if (error.message.includes("VERSION_CONFLICT")) {
-            throw new Error(
-              "El tablero cambió en otro dispositivo. Recarga para integrar los cambios.",
-            );
-          }
-          throw error;
-        }
+        if (error) throw mapBackendError(error);
         const result = Array.isArray(data) ? data[0] : data;
         boardVersion = Number(result?.board_version ?? boardVersion + 1);
         lastSavedBoard = cloneBoard(requestedBoard);
@@ -240,7 +275,7 @@ export function createSupabaseBoardAdapter({
     },
 
     async uploadImages(files) {
-      return Promise.all(
+      const results = await Promise.allSettled(
         files.map(async (file) => {
           const path = `${projectId}/${boardId}/${crypto.randomUUID()}-${safeAssetName(file.name)}`;
           const uploaded = await uploadAsset(file, path, client);
@@ -254,15 +289,38 @@ export function createSupabaseBoardAdapter({
           });
           if (error) {
             await client.storage.from(ASSET_BUCKET).remove([path]);
-            throw error;
+            throw mapBackendError(error);
+          }
+          if (typeof data !== "string" || !data) {
+            await client.storage.from(ASSET_BUCKET).remove([path]);
+            throw new Error("El servidor no confirmó el registro del activo.");
           }
           return {
             ...uploaded,
-            assetId: typeof data === "string" ? data : undefined,
+            assetId: data,
           };
         }),
       );
+      const assets = results.flatMap((result) =>
+        result.status === "fulfilled" ? [result.value] : [],
+      );
+      const failure = results.find(
+        (result): result is PromiseRejectedResult => result.status === "rejected",
+      );
+      if (failure) {
+        if (assets.length) {
+          try {
+            await discardUploadedAssets(assets);
+          } catch {
+            // Preserve the original upload error; cleanup remains safe to retry.
+          }
+        }
+        throw failure.reason;
+      }
+      return assets;
     },
+
+    discardUploadedAssets,
 
     subscribe(onRemoteChange) {
       channel = client

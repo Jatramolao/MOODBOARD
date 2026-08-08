@@ -24,9 +24,15 @@ export function mapBackendError(error: unknown): BackendError {
   const code = knownCodes.find((candidate) => rawMessage.includes(candidate)) ??
     (rawMessage.toLowerCase().includes("duplicate") ? "CONFLICT" : "UNKNOWN");
   const versionMatch = rawMessage.match(/VERSION_CONFLICT:(\d+)/);
+  const codeIndex = rawMessage.indexOf(code);
+  const domainMessage = code === "UNKNOWN"
+    ? "Error inesperado del backend."
+    : codeIndex >= 0
+      ? rawMessage.slice(codeIndex).split("\n", 1)[0].slice(0, 240)
+      : code;
   return {
     code,
-    message: code === "UNKNOWN" ? "Error inesperado del backend." : rawMessage,
+    message: domainMessage,
     retryable: code === "VERSION_CONFLICT" || code === "RATE_LIMITED",
     currentVersion: versionMatch ? Number(versionMatch[1]) : undefined,
   };

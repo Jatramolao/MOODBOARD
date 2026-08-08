@@ -10,9 +10,10 @@ import {
   useRef,
   useState,
 } from "react";
-import type {
-  BoardAdapter,
-  UploadedBoardAsset,
+import {
+  removeCardsForAssets,
+  type BoardAdapter,
+  type UploadedBoardAsset,
 } from "@/lib/board-adapter";
 import { cloneDefaultBoard } from "@/lib/board-data";
 import {
@@ -26,6 +27,7 @@ import type {
   BoardMeta,
   BoardState,
 } from "@/lib/board-types";
+import { frontendErrorMessage, readBackendError } from "@/lib/frontend-errors";
 
 const STORAGE_KEY = "moodboard.workspace.v1";
 const MIN_SECTION_WIDTH = 420;
@@ -78,6 +80,7 @@ export function BoardProvider({
   const [networkOnline, setNetworkOnline] = useState(true);
   const suppressNextSave = useRef(false);
   const lastLocalSave = useRef(0);
+  const pendingUploads = useRef(new Map<string, UploadedBoardAsset>());
 
   useEffect(() => {
     const updateNetworkState = () => {
@@ -181,6 +184,10 @@ export function BoardProvider({
           setSyncStatus("saving");
           lastLocalSave.current = Date.now();
           await adapter.save(state);
+          const savedCardIds = new Set(state.cards.map((card) => card.id));
+          pendingUploads.current.forEach((_, cardId) => {
+            if (savedCardIds.has(cardId)) pendingUploads.current.delete(cardId);
+          });
           setSyncStatus("saved");
           setSyncError(undefined);
         } else {
@@ -191,10 +198,64 @@ export function BoardProvider({
           setSyncStatus("local");
         }
       } catch (error) {
+        const mapped = readBackendError(error);
+        const pending = [...pendingUploads.current.entries()].filter(([cardId]) =>
+          state.cards.some((card) => card.id === cardId),
+        );
+        let cleanupFailed = false;
+        if (adapter && pending.length) {
+          let cleanup;
+          try {
+            cleanup = await adapter.discardUploadedAssets(
+              pending.map(([, asset]) => asset),
+            );
+          } catch {
+            cleanup = {
+              discardedAssetIds: [],
+              retainedAssetIds: [],
+              failedAssetIds: pending.flatMap(([, asset]) =>
+                asset.assetId ? [asset.assetId] : [],
+              ),
+            };
+          }
+          const retained = new Set(cleanup.retainedAssetIds);
+          const removable = new Set([
+            ...cleanup.discardedAssetIds,
+            ...cleanup.failedAssetIds,
+          ]);
+          cleanupFailed = cleanup.failedAssetIds.length > 0;
+          pending.forEach(([cardId, asset]) => {
+            if (!asset.assetId || !retained.has(asset.assetId)) {
+              pendingUploads.current.delete(cardId);
+            }
+          });
+          if (removable.size) {
+            setState((current) => removeCardsForAssets(current, removable));
+          }
+          if (retained.size) {
+            try {
+              const remote = await adapter.load();
+              if (remote) {
+                suppressNextSave.current = true;
+                setState(remote);
+                pending.forEach(([cardId]) => pendingUploads.current.delete(cardId));
+                setSyncStatus("saved");
+                setSyncError(undefined);
+                return;
+              }
+            } catch {
+              cleanupFailed = true;
+            }
+          }
+        }
         setSyncStatus("error");
-        const message = error instanceof Error ? error.message : "No se pudo guardar.";
-        setSyncError(message);
-        if (message.includes("cambió en otro dispositivo") || message.includes("VERSION_CONFLICT")) {
+        const message = frontendErrorMessage(error, "No se pudo guardar.");
+        setSyncError(cleanupFailed
+          ? `${message} La tarjeta local se retiró, pero la limpieza del activo requiere reintento.`
+          : pending.length
+            ? `${message} La carga incompleta se retiró del tablero y de Referencias.`
+            : message);
+        if (mapped.code === "VERSION_CONFLICT") {
           setVersionConflict(true);
         }
       }
@@ -295,17 +356,26 @@ export function BoardProvider({
           );
     } catch (error) {
       setSyncStatus("error");
-      setSyncError(
-        error instanceof Error ? error.message : "No se pudo subir la imagen.",
-      );
+      setSyncError(frontendErrorMessage(error, "No se pudo subir la imagen."));
       return;
+    }
+
+    const pending = assets.map((asset, index) => ({
+      asset,
+      cardId: crypto.randomUUID(),
+      title: accepted[index].name.replace(/\.[^.]+$/, ""),
+    }));
+    if (adapter) {
+      pending.forEach(({ asset, cardId }) => {
+        pendingUploads.current.set(cardId, asset);
+      });
     }
 
     startTransition(() => {
       setState((current) => {
         const section = current.sections[0];
-        const additions = assets.map<BoardCard>((asset, index) => ({
-          id: crypto.randomUUID(),
+        const additions = pending.map<BoardCard>(({ asset, cardId, title }, index) => ({
+          id: cardId,
           sectionId: section.id,
           type: "image",
           x: 72 + ((current.cards.length + index) % 3) * 250,
@@ -315,7 +385,7 @@ export function BoardProvider({
           imageUrl: asset.imageUrl,
           imagePath: asset.imagePath,
           assetId: asset.assetId,
-          title: accepted[index].name.replace(/\.[^.]+$/, ""),
+          title,
         }));
         return { ...current, cards: [...current.cards, ...additions] };
       });
