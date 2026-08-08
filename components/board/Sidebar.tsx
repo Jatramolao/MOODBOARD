@@ -21,7 +21,7 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { backend } from "@/lib/backend/client";
-import { mapBoard, mapProject } from "@/lib/backend/mappers";
+import { createdBoardId, mapBoard, mapProject } from "@/lib/backend/mappers";
 import type { BoardSummary, ProjectSummary } from "@/lib/backend/types";
 import { createClient } from "@/lib/supabase/client";
 import { frontendErrorMessage, redirectOnUnauthorized } from "@/lib/frontend-errors";
@@ -98,8 +98,9 @@ export function Sidebar({
     try {
       if (editor.kind === "project") {
         const result = await backend.createProject(name.trim(), clientName.trim());
-        const row = Array.isArray(result) ? result[0] : result;
-        window.location.assign(`/?board=${encodeURIComponent(String((row as Record<string, unknown>).board_id))}`);
+        const boardId = createdBoardId(result);
+        if (!boardId) throw new Error("El proyecto se creó, pero no recibimos el identificador de su tablero.");
+        window.location.assign(`/?board=${encodeURIComponent(boardId)}`);
         return;
       }
       if (editor.kind === "edit-project") {
@@ -108,8 +109,9 @@ export function Sidebar({
       }
       if (editor.kind === "board") {
         const result = await backend.createBoard(runtime.projectId, name.trim());
-        const row = Array.isArray(result) ? result[0] : result;
-        window.location.assign(`/?board=${encodeURIComponent(String((row as Record<string, unknown>).board_id))}`);
+        const boardId = createdBoardId(result);
+        if (!boardId) throw new Error("El tablero se creó, pero no recibimos un identificador válido.");
+        window.location.assign(`/?board=${encodeURIComponent(boardId)}`);
         return;
       }
       await backend.updateBoard(editor.board.id, name.trim());

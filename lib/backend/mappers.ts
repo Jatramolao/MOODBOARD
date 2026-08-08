@@ -16,6 +16,14 @@ type Row = Record<string, unknown>;
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 const nullableText = (value: unknown) => (typeof value === "string" ? value : null);
 
+export function createdBoardId(value: unknown): string | null {
+  const result = Array.isArray(value) ? value[0] : value;
+  if (typeof result === "string") return result.trim() || null;
+  if (!result || typeof result !== "object") return null;
+  const boardId = (result as Row).board_id;
+  return typeof boardId === "string" && boardId.trim() ? boardId : null;
+}
+
 export function mapProject(row: Row): ProjectSummary {
   const membership = Array.isArray(row.project_members) ? row.project_members[0] as Row | undefined : undefined;
   return {

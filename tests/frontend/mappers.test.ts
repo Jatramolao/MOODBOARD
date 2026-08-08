@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mapBoard, mapComment, mapProject } from "../../lib/backend/mappers.ts";
+import { createdBoardId, mapBoard, mapComment, mapProject } from "../../lib/backend/mappers.ts";
+
+test("obtiene el tablero creado desde respuestas escalares o tabulares", () => {
+  assert.equal(createdBoardId("board-scalar"), "board-scalar");
+  assert.equal(createdBoardId({ board_id: "board-row" }), "board-row");
+  assert.equal(createdBoardId([{ board_id: "board-array" }]), "board-array");
+});
+
+test("rechaza respuestas sin ID antes de construir board=undefined", () => {
+  assert.equal(createdBoardId(undefined), null);
+  assert.equal(createdBoardId({ board_id: undefined }), null);
+  assert.equal(createdBoardId([]), null);
+});
 
 test("mapea proyectos snake_case con el rol de la membresía", () => {
   const project = mapProject({
