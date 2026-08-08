@@ -54,3 +54,19 @@ Después de aplicar la migración y fusionar el ajuste frontend:
 4. repetir M1B con owner en un tablero nuevo y vacío;
 5. verificar versión 2, un `board_item`, un lote de operaciones y un activo
    `ready` asociado; recargar y confirmar que la imagen persiste.
+
+## Entrega frontend
+
+Completada el 8 de agosto de 2026 en dos commits separados:
+
+- `5f2b2f9`: consume correctamente el UUID escalar de `create_board` y evita
+  construir `board=undefined`.
+- `4a4fdac`: conserva errores de dominio del guardado, compensa activos cuando
+  `item.create` falla, limpia cargas múltiples parciales y recarga el estado
+  remoto si `ASSET_IN_USE` confirma que la tarjeta sí llegó a persistirse.
+
+Validación aprobada: suite local 28/28, suite HTTP 3/3, TypeScript, ESLint,
+build de producción y `git diff --check`.
+
+La puerta manual M1B continúa bajo responsabilidad de integración después de
+aplicar y validar la migración `202608080001_validate_board_item_assets.sql`.
