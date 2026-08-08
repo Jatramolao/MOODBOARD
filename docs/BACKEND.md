@@ -2,7 +2,8 @@
 
 Estado: implementado y aplicado en Supabase. Backend v1 desplegado el 3 de
 agosto de 2026 y corrección de `pgcrypto` aplicada y verificada el 4 de agosto
-de 2026.
+de 2026. La corrección de consistencia para la primera imagen está preparada
+localmente y pendiente de aplicar/verificar en Supabase.
 
 ## Alcance
 
@@ -62,6 +63,20 @@ item.create    | item.update    | item.delete
 
 Eliminar un elemento es lógico (`deleted_at`); mantiene historia y evita que
 un cliente atrasado lo resucite accidentalmente.
+
+### Consistencia entre elementos y activos
+
+La migración `202608080001_validate_board_item_assets.sql` agrega una defensa
+en el límite de base de datos para `board_items`:
+
+- normaliza `colors` desde JSON `null` a `NULL` SQL;
+- exige que todo `asset_id` esté en estado `ready` y no eliminado;
+- exige que activo y elemento pertenezcan al mismo proyecto y tablero;
+- exige que `image_path` coincida con `assets.storage_path`.
+
+Así se evita tanto el fallo de la primera imagen causado por la restricción de
+paleta como la asociación de un elemento a un activo ajeno. La migración debe
+aplicarse antes de repetir la puerta manual M1B.
 
 ## Funciones RPC públicas
 
@@ -148,9 +163,13 @@ RATE_LIMITED              429, reintentable
 - Backend v1: `supabase/migrations/202608030001_backend_v1.sql`
 - Corrección de `pgcrypto` para funciones con `SECURITY DEFINER`:
   `supabase/migrations/202608030002_fix_pgcrypto_search_path.sql`
+- Consistencia elemento/activo (pendiente de aplicar en Supabase):
+  `supabase/migrations/202608080001_validate_board_item_assets.sql`
 - Integración SQL: `supabase/tests/backend_v1.sql`
 - Pruebas TypeScript: `tests/backend/*.test.ts`
 
 La prueba SQL corre dentro de una transacción y termina en `rollback`; valida
-RLS, bootstrap de proyecto, versionado, idempotencia, generación y resolución
-de tokens, y comentarios compartidos sin dejar datos.
+RLS, bootstrap de proyecto, primera imagen con activo, normalización de paleta,
+rechazo de activos de otro tablero, idempotencia, protección `ASSET_IN_USE`,
+borrado lógico, generación y resolución de tokens, y comentarios compartidos
+sin dejar datos.
