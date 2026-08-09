@@ -45,6 +45,13 @@ corregir y volver a aprobar la primera imagen de un tablero vacío.
 - Auditoría de dependencias de producción: 0 vulnerabilidades conocidas.
 - Migración `202608030002_fix_pgcrypto_search_path.sql`: aplicada en Supabase
   el 4 de agosto de 2026.
+- Historial remoto de migraciones conciliado el 8 de agosto: las cuatro
+  versiones locales `202607310001`–`202608080001` están registradas y
+  `supabase db push --dry-run` informa la base al día.
+- Migración `202608080001_validate_board_item_assets.sql`: aplicada en el
+  proyecto Supabase `mwcqastezpqsqsaokyzp`.
+- Prueba SQL 1B ejecutada contra la base remota y aprobada con
+  `backend_v1 QA passed`; el escenario completo termina en `ROLLBACK`.
 - Prueba SQL ampliada: aprobada con generación de invitaciones, creación y
   resolución de enlaces compartidos y comentarios compartidos.
 - QA público/local: autenticación inválida, callback expirado, invitación
@@ -128,8 +135,11 @@ si `item.create + asset_id` introduce un bloqueo backend distinto.
 - Regresión SQL ampliada para primera imagen, idempotencia, activo ajeno,
   `ASSET_IN_USE` y borrado posterior a `item.delete`.
 - Validación local aprobada: backend/frontend 22/22, integración HTTP 3/3 y
-  build de producción. La migración y la prueba SQL aún no se aplican en
-  Supabase porque requieren autorización y sesión autenticada.
+  build de producción.
+- Migración aplicada y regresión SQL remota aprobada el 8 de agosto. El arnés
+  resuelve la sección inicial como `postgres` y vuelve al rol `authenticated`
+  antes de ejecutar todas las operaciones de producto, evitando un falso
+  `SECTION_NOT_FOUND` causado por la preparación del test bajo RLS.
 
 ### Ajustes frontend 1A y 1B completados localmente
 
@@ -152,14 +162,14 @@ si `item.create + asset_id` introduce un bloqueo backend distinto.
   `git diff --check`.
 - El puerto 3000 pertenece a otro workspace local; no se detuvo ni modificó
   ese proceso durante la validación.
-- Único bloqueo de M1B: aplicar y verificar la migración 1B en Supabase antes
-  de repetir el recorrido manual.
+- La migración y el contrato SQL de M1B están aprobados; queda repetir el
+  recorrido manual de primera imagen en un tablero vacío.
 
 ## Responsable actual y siguiente handoff
 
-1. Aplicar la migración 1B en Supabase y ejecutar la prueba SQL transaccional.
+1. Migración 1B aplicada y prueba SQL transaccional remota aprobada.
 2. Frontend completó M1A y la compensación 1B en `5f2b2f9` y `4a4fdac`.
-3. Integración debe repetir regresiones automáticas y la puerta manual M1B.
+3. Integración debe repetir la puerta manual M1B en producción.
 4. Confirmar y cerrar M1A de creación/navegación de tablero.
 5. Ejecutar secuencialmente roles/invitaciones, share/comentarios,
    concurrencia/resiliencia y UX final, cada uno con aprobación manual.

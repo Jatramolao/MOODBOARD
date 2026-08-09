@@ -15,9 +15,16 @@ Actualización integración de handoffs 1A/1B — 8 de agosto de 2026:
 - La suite HTTP se ejecutó contra `localhost:3001` porque el puerto 3000 estaba
   ocupado por otro workspace local; las respuestas de esta aplicación cumplen
   los contratos de callback, share e identificadores inválidos.
-- La puerta M1B permanece pendiente de repetición: la migración
-  `202608080001_validate_board_item_assets.sql` todavía no está aplicada en
-  Supabase.
+- La migración `202608080001_validate_board_item_assets.sql` fue aplicada al
+  proyecto Supabase y el historial remoto quedó conciliado con las cuatro
+  migraciones locales.
+- La prueba SQL transaccional remota aprobó primera imagen, idempotencia,
+  aislamiento de assets, `ASSET_IN_USE`, eliminación posterior y RLS con el
+  resultado `backend_v1 QA passed`; no persistió datos por su `ROLLBACK`.
+- Se corrigió el arnés SQL para obtener la sección de preparación como
+  `postgres` y volver al rol `authenticated` antes de probar el producto. El
+  fallo previo `SECTION_NOT_FOUND` provenía del setup del test bajo RLS.
+- La puerta manual M1B permanece pendiente de repetición en producción.
 
 Actualización prueba manual M1B en producción — 8 de agosto de 2026:
 

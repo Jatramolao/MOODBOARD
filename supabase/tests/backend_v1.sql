@@ -109,14 +109,24 @@ with created as (
 update qa_backend_context context
 set project_id = created.project_id,
     board_id = created.board_id,
-    section_id = (
-      select id from public.board_sections
-      where board_id = created.board_id
-      order by position
-      limit 1
-    ),
     board_version = 1
 from created;
+
+-- The project RPC runs as SECURITY DEFINER, while the surrounding test is
+-- impersonating `authenticated`. Resolve the bootstrap section as postgres so
+-- the test harness does not depend on RLS visibility inside the same statement.
+-- All product operations below still run as the authenticated project owner.
+reset role;
+
+update qa_backend_context context
+set section_id = (
+  select id from public.board_sections
+  where board_id = context.board_id
+  order by position
+  limit 1
+);
+
+set local role authenticated;
 
 do $$
 begin
