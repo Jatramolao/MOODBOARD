@@ -22,9 +22,10 @@ corregir y volver a aprobar la primera imagen de un tablero vacío.
 
 ## Base confirmada
 
-- Rama actual: `codex/001-first-image-backend`, con los handoffs backend y
-  frontend integrados hasta `71064d6`. `main`/`origin/main` permanecen como
-  base publicada en `55b707c`.
+- Rama actual: `codex/001-first-image-backend`, publicada en GitHub y enlazada
+  con `origin/codex/001-first-image-backend`; contiene los handoffs backend y
+  frontend y la validación remota 1B hasta `21f8503`. `main`/`origin/main`
+  permanecen como base de producción en `55b707c`.
 - Backend v1: commit local `f6af218`.
 - Corrección backend de tokens `pgcrypto`: commit local `746acbf`.
 - Frontend colaborativo v1: commit local `fec5fc6`.
