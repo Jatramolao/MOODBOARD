@@ -57,7 +57,12 @@ function AssetsPanel({ runtime, onViewChange }: { runtime: Extract<WorkspaceRunt
       setStatus("ready");
     } catch (cause) { if (!redirectOnUnauthorized(cause)) setMessage(frontendErrorMessage(cause, "No pudimos cargar los activos.")); setStatus("error"); }
   };
-  useEffect(() => { void load(); }, [runtime.projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    void load();
+    const refresh = () => void load();
+    window.addEventListener("moodboard:assets-changed", refresh);
+    return () => window.removeEventListener("moodboard:assets-changed", refresh);
+  }, [runtime.projectId]); // eslint-disable-line react-hooks/exhaustive-deps
   if (status === "loading") return <PanelSkeleton title="Referencias" />;
   if (status === "error") return <SurfaceState tone="error">{message}</SurfaceState>;
   const bytes = Number(usage?.asset_bytes ?? usage?.assetBytes ?? assets.reduce((sum, asset) => sum + asset.byteSize, 0));

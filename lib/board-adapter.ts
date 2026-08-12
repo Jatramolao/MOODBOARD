@@ -29,6 +29,7 @@ export interface BoardAdapter {
   load(): Promise<BoardState | null>;
   save(board: BoardState): Promise<void>;
   uploadImages(files: File[]): Promise<UploadedBoardAsset[]>;
+  deleteAsset(assetId: string): Promise<void>;
   discardUploadedAssets(
     assets: UploadedBoardAsset[],
   ): Promise<DiscardUploadedAssetsResult>;

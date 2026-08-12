@@ -320,6 +320,13 @@ export function createSupabaseBoardAdapter({
       return assets;
     },
 
+    async deleteAsset(assetId) {
+      const { error } = await client.rpc("mark_asset_deleted", {
+        p_asset_id: assetId,
+      });
+      if (error) throw mapBackendError(error);
+    },
+
     discardUploadedAssets,
 
     subscribe(onRemoteChange) {

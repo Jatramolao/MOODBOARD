@@ -28,6 +28,7 @@ import type {
   BoardState,
 } from "@/lib/board-types";
 import { frontendErrorMessage, readBackendError } from "@/lib/frontend-errors";
+import { executeImageRemoval } from "@/lib/image-removal";
 
 const STORAGE_KEY = "moodboard.workspace.v1";
 const MIN_SECTION_WIDTH = 420;
@@ -81,6 +82,7 @@ export function BoardProvider({
   const suppressNextSave = useRef(false);
   const lastLocalSave = useRef(0);
   const pendingUploads = useRef(new Map<string, UploadedBoardAsset>());
+  const removalsInFlight = useRef(new Set<string>());
 
   useEffect(() => {
     const updateNetworkState = () => {
@@ -463,6 +465,85 @@ export function BoardProvider({
     }));
   }, [readOnly, versionConflict]);
 
+  const removeImage = useCallback(async (
+    cardId: string,
+    scope: "board" | "board-and-references",
+    onStage?: (stage: "removing" | "deleting") => void,
+  ) => {
+    if (readOnly || versionConflict) {
+      throw new Error("Tu rol no permite retirar esta imagen.");
+    }
+    if (removalsInFlight.current.has(cardId)) {
+      throw new Error("La eliminación de esta imagen ya está en curso.");
+    }
+
+    removalsInFlight.current.add(cardId);
+    onStage?.("removing");
+    setSyncStatus("saving");
+    setSyncError(undefined);
+    try {
+      const outcome = await executeImageRemoval({
+        board: state,
+        cardId,
+        scope,
+        persistBoard: async (next) => {
+          if (adapter) {
+            lastLocalSave.current = Date.now();
+            await adapter.save(next);
+          } else {
+            window.localStorage.setItem(
+              STORAGE_KEY,
+              JSON.stringify({ version: 1, board: next }),
+            );
+          }
+        },
+        deleteAsset: async (assetId) => {
+          if (adapter) await adapter.deleteAsset(assetId);
+        },
+        onBoardSaved: (next) => {
+          if (adapter) suppressNextSave.current = true;
+          setState(next);
+          setSyncStatus(adapter ? "saved" : "local");
+        },
+        onDeleting: () => onStage?.("deleting"),
+      });
+
+      if (outcome.reference === "deleted") {
+        window.dispatchEvent(new CustomEvent("moodboard:assets-changed"));
+        return {
+          status: "deleted" as const,
+          message: "La tarjeta se retiró y la imagen se eliminó definitivamente de Referencias.",
+        };
+      }
+      if (outcome.reference === "retained-after-error") {
+        const mapped = readBackendError(outcome.cause);
+        const detail = mapped.code === "ASSET_IN_USE"
+          ? "La imagen todavía se usa en otro lugar."
+          : frontendErrorMessage(outcome.cause, "No pudimos eliminar el archivo.");
+        return {
+          status: "reference-retained" as const,
+          message: `La tarjeta fue retirada, pero la referencia se conservó. ${detail} Puedes reintentar desde Referencias.`,
+        };
+      }
+      return {
+        status: "removed" as const,
+        message: "La tarjeta se retiró del tablero. La imagen continúa disponible en Referencias.",
+      };
+    } catch (cause) {
+      const mapped = readBackendError(cause);
+      const message = frontendErrorMessage(
+        cause,
+        "No se pudo retirar la tarjeta. No se modificó la referencia.",
+      );
+      setSyncStatus("error");
+      setSyncError(message);
+      if (mapped.code === "VERSION_CONFLICT") setVersionConflict(true);
+      throw new Error(message);
+    } finally {
+      removalsInFlight.current.delete(cardId);
+    }
+  }, [adapter, readOnly, state, versionConflict]);
+
   const updateCardText = useCallback((cardId: string, title: string, content: string) => {
     if (readOnly || versionConflict) return;
     setState((current) => ({
@@ -513,6 +594,7 @@ export function BoardProvider({
       moveCard,
       resizeCard,
       removeCard,
+      removeImage,
       updateCardText,
       setZoom,
       resetBoard,
@@ -523,6 +605,7 @@ export function BoardProvider({
       addSection,
       moveCard,
       removeCard,
+      removeImage,
       updateCardText,
       resetBoard,
       resizeCard,

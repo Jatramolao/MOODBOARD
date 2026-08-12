@@ -26,6 +26,7 @@ export function frontendErrorMessage(error: unknown, fallback: string) {
     : `No se pudo guardar (${mapped.message}). Revisa el cambio e inténtalo nuevamente.`;
   if (mapped.code === "RATE_LIMITED") return "Alcanzaste el límite temporal de solicitudes. Conservamos tus datos; inténtalo nuevamente en unos minutos.";
   if (mapped.code === "QUOTA_EXCEEDED") return "El proyecto alcanzó su límite activo. Archiva un proyecto, tablero o activo que ya no necesites y vuelve a intentarlo.";
+  if (mapped.code === "UNAUTHORIZED") return "Tu sesión expiró. La tarjeta retirada permanece guardada y la referencia se conservó; vuelve a ingresar para completar la limpieza.";
   if (mapped.code === "FORBIDDEN") return "Tu rol no permite realizar esta acción.";
   if (mapped.code === "ASSET_IN_USE") return "Este activo todavía está utilizado en el tablero.";
   return mapped.message && !["Error inesperado.", "Error inesperado del backend."].includes(mapped.message)

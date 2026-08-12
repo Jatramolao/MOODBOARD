@@ -27,10 +27,12 @@ export function BoardCard({
   card,
   globalX,
   eager = false,
+  onRequestImageRemoval,
 }: {
   card: BoardCardType;
   globalX: number;
   eager?: boolean;
+  onRequestImageRemoval: (card: BoardCardType) => void;
 }) {
   const {
     actions,
@@ -211,11 +213,12 @@ export function BoardCard({
         </button>
         {meta.canEdit ? <button
           type="button"
-          aria-label={`Eliminar ${card.title ?? "elemento"}`}
-          title="Eliminar"
+          aria-label={card.type === "image" ? `Elegir cómo retirar ${card.title ?? "imagen"}` : `Eliminar ${card.title ?? "elemento"}`}
+          title={card.type === "image" ? "Retirar imagen" : "Eliminar"}
           onClick={(event) => {
             event.stopPropagation();
-            setConfirmDelete(true);
+            if (card.type === "image") onRequestImageRemoval(card);
+            else setConfirmDelete(true);
           }}
         >
           <Trash size={16} />
@@ -273,8 +276,8 @@ export function BoardCard({
         onKeyDown={onResizeKeyDown}
       /> : null}
       {confirmDelete ? <div className="card-delete-confirm" role="dialog" aria-label={`Eliminar ${card.title ?? "elemento"}`} onPointerDown={(event) => event.stopPropagation()}>
-        <p>¿Retirar “{card.title ?? "este elemento"}” del tablero?{card.type === "image" ? " El archivo seguirá disponible en Referencias." : ""}</p>
-        <div><button type="button" onClick={() => setConfirmDelete(false)}>Cancelar</button><button type="button" onClick={() => actions.removeCard(card.id)}>{card.type === "image" ? "Retirar" : "Eliminar"}</button></div>
+        <p>¿Eliminar “{card.title ?? "este elemento"}” del tablero?</p>
+        <div><button type="button" onClick={() => setConfirmDelete(false)}>Cancelar</button><button type="button" onClick={() => actions.removeCard(card.id)}>Eliminar</button></div>
       </div> : null}
     </article>
   );

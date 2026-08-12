@@ -28,6 +28,13 @@ export type BoardState = {
   zoom: number;
 };
 
+export type ImageRemovalScope = "board" | "board-and-references";
+
+export type ImageRemovalResult = {
+  status: "removed" | "deleted" | "reference-retained";
+  message: string;
+};
+
 export type BoardActions = {
   addSection: (name: string) => void;
   addNote: () => void;
@@ -39,6 +46,11 @@ export type BoardActions = {
   ) => void;
   resizeCard: (cardId: string, width: number, height: number) => void;
   removeCard: (cardId: string) => void;
+  removeImage: (
+    cardId: string,
+    scope: ImageRemovalScope,
+    onStage?: (stage: "removing" | "deleting") => void,
+  ) => Promise<ImageRemovalResult>;
   updateCardText: (cardId: string, title: string, content: string) => void;
   setZoom: (zoom: number) => void;
   resetBoard: () => void;

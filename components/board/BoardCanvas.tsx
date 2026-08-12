@@ -14,6 +14,8 @@ import {
   useBoard,
 } from "./BoardProvider";
 import { BoardCard } from "./BoardCard";
+import { ImageRemovalDialog } from "./ImageRemovalDialog";
+import type { BoardCard as BoardCardType } from "@/lib/board-types";
 
 export function BoardCanvas({
   onExtend,
@@ -23,6 +25,7 @@ export function BoardCanvas({
   const { state, actions, meta } = useBoard();
   const [dragOver, setDragOver] = useState(false);
   const [placingComment, setPlacingComment] = useState(false);
+  const [imageToRemove, setImageToRemove] = useState<BoardCardType | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const zoomPercent = Math.round(state.zoom * 100);
@@ -174,6 +177,7 @@ export function BoardCanvas({
                   eager={card.type === "image" && index < 3}
                   globalX={offset + card.x}
                   key={card.id}
+                  onRequestImageRemoval={setImageToRemove}
                 />
               );
             })}
@@ -210,6 +214,12 @@ export function BoardCanvas({
           <strong>Suelta las imágenes en el tablero</strong>
           <span>Se incorporarán al tablero principal</span>
         </div>
+      ) : null}
+      {imageToRemove ? (
+        <ImageRemovalDialog
+          card={imageToRemove}
+          onClose={() => setImageToRemove(null)}
+        />
       ) : null}
     </main>
   );
