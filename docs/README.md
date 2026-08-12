@@ -27,10 +27,15 @@ Lee estos documentos en orden:
 
 ## Continuar el ciclo activo
 
-El ciclo 002 terminó su implementación y despliegue. Espera validación manual y cierre:
+El ciclo 003 está aprobado y comienza por backend:
 
-- `docs/specs/002-explicit-image-removal.md`: comportamiento acordado y criterios de aceptación
-- `docs/plans/002/MANUAL_QA.md`: puerta manual M002
+- `docs/specs/003-reference-library-reuse.md`: biblioteca de proyecto, miniaturas y reutilización entre tableros
+- `docs/plans/003/README.md`: orden backend, frontend, integración y publicación
+- `docs/plans/003/MANUAL_QA.md`: puertas manuales M003-A a M003-E
+
+El ciclo 002 quedó aprobado por producto el 12 de agosto de 2026. Git conserva su spec y su protocolo manual.
+
+La referencia breve del comportamiento publicado permanece en `docs/specs/002-explicit-image-removal.md` con estado `released`.
 
 ## Mantener la documentación
 

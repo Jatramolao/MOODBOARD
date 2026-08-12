@@ -5,11 +5,11 @@ meta:
 
 # Comprobar la calidad vigente
 
-Este informe registra la evidencia que determina si el ciclo 002 puede publicarse. Última actualización: 12 de agosto de 2026.
+Este informe registra el cierre del ciclo 002 y la línea base del ciclo 003. Última actualización: 12 de agosto de 2026.
 
-## Resultado actual
+## Cierre manual del ciclo 002
 
-La implementación, la integración automática y el deployment productivo están aprobados. La puerta manual M002 y el smoke productivo siguen pendientes.
+Producto aprobó M002 después de probar el flujo desplegado en producción.
 
 | Área | Resultado |
 |---|---|
@@ -22,9 +22,11 @@ La implementación, la integración automática y el deployment productivo está
 | Dependencias de producción | 0 vulnerabilidades conocidas |
 | Responsive | Aprobado en 390, 768, 1280 y 1440 px |
 | Diálogo con teclado y foco | Aprobado localmente |
-| Puerta manual M002 | Pendiente |
+| M002-A, retirar sólo | Aprobada en producción |
+| M002-B, retirar y eliminar | Aprobada en producción |
+| Uso activo, permisos y fallos | Cubiertos por regresiones y QA local |
 | Deployment productivo | `Ready`, `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ` |
-| Smoke productivo del ciclo 002 | Pendiente |
+| Decisión de producto | Ciclo aprobado y cerrado |
 
 ## Comportamientos ya confirmados
 
@@ -37,25 +39,23 @@ La implementación, la integración automática y el deployment productivo está
 - Un fallo posterior conserva la referencia y no recrea la tarjeta
 - Viewer no recibe controles de eliminación
 
-## Puerta manual pendiente
+## Evidencia manual registrada
 
-Ejecuta `docs/plans/002/MANUAL_QA.md` con activos `QA-002` desechables. La puerta cubre:
+La ejecución productiva confirmó:
 
-1. Retirar sólo del tablero
-2. Retirar y eliminar de Referencias
-3. Mantener una referencia que todavía tiene otro uso
-4. Cancelar y validar permisos de viewer
-5. Interrumpir la red entre el guardado y la eliminación del activo
+1. Subir una imagen y elegir **Retirar sólo del tablero** conserva la referencia
+2. Subir otra imagen y elegir **Retirar y eliminar de Referencias** elimina ambos registros visibles
 
-Registra ambiente, commit, rol, resultado, consola, red y limpieza de datos. M002 pasa sólo cuando los cinco casos dejan un estado coherente después de recargar.
+No se informó un error de guardado ni un registro residual. Producto autorizó avanzar al ciclo siguiente.
 
-## Criterios para cerrar el ciclo
+## Línea base del ciclo 003
 
-No marques la spec como `released` hasta cumplir estas condiciones:
+El ciclo 003 parte con esta línea base:
 
-- M002 aprobada
-- Sin defectos P0 o P1 abiertos
-- Smoke productivo aprobado
-- Resultado registrado en este informe
+- Suite backend y frontend: 34 de 34 aprobada
+- Suite HTTP: 3 de 3 aprobada
+- TypeScript, ESLint y build: aprobados
+- Sin defectos P0 o P1 abiertos del ciclo 002
+- Puertas M003 todavía no ejecutadas
 
-El historial de fallos y correcciones anteriores permanece disponible en Git.
+El historial detallado del ciclo 002 permanece disponible en Git.

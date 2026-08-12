@@ -9,15 +9,16 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 
 ## Estado ejecutivo
 
-- **Fase**: validación productiva y cierre del ciclo 002
-- **Rama local**: `codex/002-explicit-image-removal` en `5b741b1`
+- **Fase**: backend del ciclo 003, biblioteca reutilizable de Referencias
+- **Rama local**: `codex/003-reference-library-reuse`
 - **GitHub**: `main` y `origin/main` en `5b741b1`
 - **Producción**: deployment `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ`, estado `Ready`
-- **Backend**: sin cambios pendientes ni migraciones nuevas para el ciclo 002
+- **Ciclo 002**: aprobado manualmente y cerrado por producto
+- **Spec 003**: `approved`
 - **Bloqueos de código**: ninguno conocido
-- **Puerta pendiente**: M002 con owner, editor, viewer y activos desechables
+- **Responsable siguiente**: sesión backend
 
-## Resultado del ciclo 002
+## Cierre del ciclo 002
 
 El frontend permite elegir entre retirar una imagen del tablero o retirarla y eliminarla de Referencias. La segunda acción guarda primero `item.delete` y después llama `mark_asset_deleted`.
 
@@ -28,6 +29,13 @@ El flujo conserva estas reglas:
 - Un error posterior informa que la tarjeta se retiró y la referencia permanece
 - Viewer no recibe controles de eliminación
 - Notas y paletas mantienen su eliminación anterior
+
+La prueba manual productiva confirmó estos resultados:
+
+- **Retirar sólo del tablero** conserva la imagen en Referencias
+- **Retirar y eliminar de Referencias** elimina la imagen de ambos lugares
+
+Producto aprobó avanzar. Las regresiones automáticas y el QA local cubren uso activo, permisos, cancelación y fallos entre etapas.
 
 ## Evidencia disponible
 
@@ -54,14 +62,20 @@ El flujo conserva estas reglas:
 
 ## Próximos pasos
 
-1. Ejecutar M002 en producción desde `docs/plans/002/MANUAL_QA.md`
-2. Registrar el resultado en `QA_REPORT.md`
-3. Corregir y repetir sólo los casos devueltos
-4. Ejecutar el smoke productivo del flujo afectado
-5. Marcar la spec 002 como `released` si M002 y el smoke pasan
-6. Definir la siguiente spec o declarar que no existen pendientes activos
+1. Backend audita duplicados activos por tablero y activo
+2. Backend prepara la migración expansiva y las pruebas SQL
+3. Backend documenta el contrato y entrega el handoff frontend
+4. Frontend implementa miniaturas privadas y consulta de usos
+5. Integración ejecuta M003-A antes de habilitar la reinserción
+6. Continuar los paquetes 3 a 5 según `docs/plans/003/README.md`
 
-No se requiere otro despliegue para validar el código actual. Cualquier corrección, push o despliegue adicional necesita una nueva autorización.
+La aprobación habilita trabajo local. Las migraciones productivas, push, merge y despliegue necesitan autorizaciones independientes.
+
+## Alcance aprobado del ciclo 003
+
+Referencias conserva activos, pero no muestra miniaturas persistentes ni permite reinsertarlos. El trigger actual también limita cada activo a su tablero de origen.
+
+La spec 003 convierte el banco en una biblioteca del proyecto. Incluye miniaturas privadas, reinserción, reutilización entre tableros y localización de usos.
 
 ## Restricciones permanentes
 
@@ -73,4 +87,4 @@ No se requiere otro despliegue para validar el código actual. Cualquier correcc
 
 ## Fuentes vigentes
 
-Consulta `docs/README.md` para elegir la fuente adecuada. Las referencias principales son `docs/BACKEND.md`, `docs/FRONTEND_HANDOFF.md`, `docs/OPERATIONS.md`, la spec 002 y M002.
+Consulta `docs/README.md` para elegir la fuente adecuada. Las referencias principales son `docs/BACKEND.md`, `docs/FRONTEND_HANDOFF.md`, `docs/OPERATIONS.md`, la spec 003 y M003.
