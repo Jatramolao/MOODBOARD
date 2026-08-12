@@ -1,4 +1,11 @@
-# Operación y despliegue
+---
+meta:
+  contentType: How-to
+---
+
+# Operar y desplegar el servicio
+
+Esta guía define las variables, el orden de despliegue, la observabilidad y la recuperación del servicio en Vercel y Supabase.
 
 ## Variables
 
@@ -23,8 +30,8 @@ Ninguna variable server-only puede usar el prefijo `NEXT_PUBLIC_`.
 
 ## Orden de despliegue
 
-1. Aplicar migraciones Supabase en orden, incluida
-   `202608030002_fix_pgcrypto_search_path.sql`.
+1. Aplicar las migraciones Supabase en orden hasta
+   `202608080001_validate_board_item_assets.sql`.
 2. Ejecutar `supabase/tests/backend_v1.sql` y confirmar
    `backend_v1 QA passed`.
 3. Configurar variables Vercel en Production y Preview.
@@ -57,6 +64,7 @@ El cron procesa hasta 500 activos por ejecución. Repetir es seguro.
 npm run test:backend
 npm run build
 npm audit --omit=dev
+git diff --check
 ```
 
 ## Recuperación
@@ -71,4 +79,5 @@ rollback operativo consiste en restaurar el atributo anterior, pero eso vuelve
 a romper invitaciones y enlaces compartidos en Supabase; se recomienda corregir
 hacia delante.
 
-Esta migración fue aplicada y validada en Supabase el 4 de agosto de 2026.
+Las migraciones vigentes fueron aplicadas y validadas en Supabase. Corrige
+hacia delante cualquier incidente de datos o permisos.

@@ -1,9 +1,13 @@
-# Backend colaborativo v1
+---
+meta:
+  contentType: Reference
+---
 
-Estado: implementado y aplicado en Supabase. Backend v1 desplegado el 3 de
-agosto de 2026 y corrección de `pgcrypto` aplicada y verificada el 4 de agosto
-de 2026. La corrección de consistencia para la primera imagen está preparada
-localmente y pendiente de aplicar/verificar en Supabase.
+# Consultar el contrato backend
+
+El backend colaborativo v1 y sus correcciones están aplicados en Supabase. La
+migración de consistencia de activos fue aplicada y validada el 8 de agosto de
+2026.
 
 ## Alcance
 
@@ -74,9 +78,8 @@ en el límite de base de datos para `board_items`:
 - exige que activo y elemento pertenezcan al mismo proyecto y tablero;
 - exige que `image_path` coincida con `assets.storage_path`.
 
-Así se evita tanto el fallo de la primera imagen causado por la restricción de
-paleta como la asociación de un elemento a un activo ajeno. La migración debe
-aplicarse antes de repetir la puerta manual M1B.
+Esta validación evita el fallo de la primera imagen y la asociación de un
+elemento con un activo ajeno.
 
 ## Funciones RPC públicas
 
@@ -163,7 +166,7 @@ RATE_LIMITED              429, reintentable
 - Backend v1: `supabase/migrations/202608030001_backend_v1.sql`
 - Corrección de `pgcrypto` para funciones con `SECURITY DEFINER`:
   `supabase/migrations/202608030002_fix_pgcrypto_search_path.sql`
-- Consistencia elemento/activo (pendiente de aplicar en Supabase):
+- Consistencia entre elemento y activo, aplicada en Supabase:
   `supabase/migrations/202608080001_validate_board_item_assets.sql`
 - Integración SQL: `supabase/tests/backend_v1.sql`
 - Pruebas TypeScript: `tests/backend/*.test.ts`

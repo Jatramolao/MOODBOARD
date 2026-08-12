@@ -1,6 +1,6 @@
 # Moodboard Editorial
 
-Prototipo funcional de un espacio visual colaborativo para proyectos de
+Aplicación web colaborativa para proyectos de
 fotografía, video y editorial. Cada tablero comienza como un lienzo continuo y
 puede extenderse con secciones para disciplinas como Fotografía, Makeup,
 Styling o Dirección de arte.
@@ -91,9 +91,8 @@ npm run build
 npm audit --omit=dev
 ```
 
-Consulta [docs/BACKEND.md](docs/BACKEND.md),
-[docs/OPERATIONS.md](docs/OPERATIONS.md) y el traspaso específico en
-[docs/FRONTEND_HANDOFF.md](docs/FRONTEND_HANDOFF.md).
+Consulta el [índice de documentación](docs/README.md) para encontrar el estado,
+los contratos técnicos, la spec activa y la puerta manual pendiente.
 
 Todas las sesiones de trabajo deben comenzar por [AGENTS.md](AGENTS.md),
 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) y el
