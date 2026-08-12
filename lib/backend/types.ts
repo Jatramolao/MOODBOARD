@@ -16,6 +16,7 @@ export type BackendErrorCode =
   | "INVITATION_EXPIRED"
   | "INVITATION_EMAIL_MISMATCH"
   | "ASSET_IN_USE"
+  | "ASSET_ALREADY_ON_BOARD"
   | "CONFLICT"
   | "UNKNOWN";
 
@@ -103,7 +104,7 @@ export type BoardComment = {
 export type AssetRecord = {
   id: string;
   projectId: string;
-  boardId: string | null;
+  originBoardId: string | null;
   storagePath: string;
   originalName: string;
   mimeType: string;
@@ -113,6 +114,15 @@ export type AssetRecord = {
   status: AssetStatus;
   createdAt: string;
   deletedAt: string | null;
+};
+
+export type AssetUsage = {
+  assetId: string;
+  boardId: string;
+  boardName: string;
+  itemId: string;
+  itemTitle: string | null;
+  itemCreatedAt: string;
 };
 
 export type ActivityEvent = {

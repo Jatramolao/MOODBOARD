@@ -1,6 +1,7 @@
 import type {
   ActivityEvent,
   AssetRecord,
+  AssetUsage,
   BoardComment,
   BoardShareLink,
   BoardSummary,
@@ -84,10 +85,17 @@ export function mapShareLink(row: Row): BoardShareLink {
 
 export function mapAsset(row: Row): AssetRecord {
   return {
-    id: text(row.id), projectId: text(row.project_id), boardId: nullableText(row.board_id), storagePath: text(row.storage_path),
+    id: text(row.id), projectId: text(row.project_id), originBoardId: nullableText(row.board_id), storagePath: text(row.storage_path),
     originalName: text(row.original_name), mimeType: text(row.mime_type), byteSize: Number(row.byte_size),
     width: row.width == null ? null : Number(row.width), height: row.height == null ? null : Number(row.height),
     status: (row.status ?? "ready") as AssetRecord["status"], createdAt: text(row.created_at), deletedAt: nullableText(row.deleted_at),
+  };
+}
+
+export function mapAssetUsage(row: Row): AssetUsage {
+  return {
+    assetId: text(row.asset_id), boardId: text(row.board_id), boardName: text(row.board_name),
+    itemId: text(row.item_id), itemTitle: nullableText(row.item_title), itemCreatedAt: text(row.item_created_at),
   };
 }
 

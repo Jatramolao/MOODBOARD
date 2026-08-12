@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { mapBackendError } from "./errors";
+import { mapAssetUsage } from "./mappers";
 import { validateOperations } from "./validation";
 import type {
   ApplyOperationsInput,
@@ -317,6 +318,18 @@ export const backend = {
   async markAssetDeleted(assetId: string) {
     await unwrap(
       requireClient().rpc("mark_asset_deleted", { p_asset_id: assetId }),
+    );
+  },
+
+  async listAssetUsages(projectId: string, assetIds?: string[]) {
+    const data = await unwrap(
+      requireClient().rpc("list_asset_usages", {
+        p_project_id: projectId,
+        p_asset_ids: assetIds ?? null,
+      }),
+    );
+    return (Array.isArray(data) ? data : []).map((row) =>
+      mapAssetUsage(row as Record<string, unknown>),
     );
   },
 

@@ -48,6 +48,15 @@ test("traduce conflictos, cuotas e invitaciones a errores de dominio", () => {
   });
   assert.equal(mapBackendError(new Error("QUOTA_EXCEEDED: project storage")).code, "QUOTA_EXCEEDED");
   assert.equal(mapBackendError({ message: "INVITATION_EXPIRED" }).code, "INVITATION_EXPIRED");
+  assert.deepEqual(
+    mapBackendError({ message: "ASSET_ALREADY_ON_BOARD:item-123" }),
+    {
+      code: "ASSET_ALREADY_ON_BOARD",
+      message: "ASSET_ALREADY_ON_BOARD:item-123",
+      retryable: false,
+      currentVersion: undefined,
+    },
+  );
 });
 
 test("no expone detalles internos de errores desconocidos", () => {

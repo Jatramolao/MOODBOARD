@@ -1,6 +1,6 @@
 -- Transactional integration checks for the collaborative backend.
 -- Run after every migration through
--- 202608080001_validate_board_item_assets.sql in the Supabase SQL editor.
+-- 202608120001_enable_project_asset_reuse.sql in the Supabase SQL editor.
 -- No records persist: the entire test is rolled back.
 
 begin;
@@ -33,12 +33,27 @@ begin
     ('public.create_project_invitation(uuid,text,public.project_role,boolean,integer)'),
     ('public.create_board_share_link(uuid,public.share_permission,timestamp with time zone)'),
     ('public.register_asset(uuid,uuid,text,text,text,bigint,integer,integer,text)'),
-    ('public.normalize_and_validate_board_item()')
+    ('public.normalize_and_validate_board_item()'),
+    ('public.list_asset_usages(uuid,uuid[])')
   ) required(signature)
   where to_regprocedure(required.signature) is null;
 
   if missing_functions is not null then
     raise exception 'QA missing functions: %', missing_functions;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint constraint_row
+    where constraint_row.conrelid = 'public.assets'::regclass
+      and constraint_row.conname = 'assets_board_id_fkey'
+      and constraint_row.confdeltype = 'n'
+  ) then
+    raise exception 'QA expected assets.board_id ON DELETE SET NULL';
+  end if;
+
+  if to_regclass('public.board_items_active_asset_per_board_idx') is null then
+    raise exception 'QA missing active asset uniqueness index';
   end if;
 
   if exists (
@@ -66,6 +81,16 @@ create temp table qa_backend_context (
   board_version bigint,
   asset_id uuid,
   item_id uuid not null default gen_random_uuid(),
+  second_board_id uuid,
+  second_section_id uuid,
+  second_board_version bigint,
+  second_item_id uuid not null default gen_random_uuid(),
+  second_operation_id uuid not null default gen_random_uuid(),
+  second_delete_operation_id uuid not null default gen_random_uuid(),
+  duplicate_item_id uuid not null default gen_random_uuid(),
+  duplicate_operation_id uuid not null default gen_random_uuid(),
+  wrong_path_item_id uuid not null default gen_random_uuid(),
+  wrong_path_operation_id uuid not null default gen_random_uuid(),
   foreign_project_id uuid,
   foreign_board_id uuid,
   foreign_asset_id uuid,
@@ -247,6 +272,200 @@ end;
 $$;
 
 with created as (
+  select public.create_board(
+    context.project_id,
+    'QA second board'
+  ) as board_id
+  from qa_backend_context context
+)
+update qa_backend_context context
+set second_board_id = created.board_id,
+    second_board_version = 1
+from created;
+
+reset role;
+
+update qa_backend_context context
+set second_section_id = (
+  select id from public.board_sections
+  where board_id = context.second_board_id
+  order by position
+  limit 1
+);
+
+-- Exercise the same project-level asset placement as an editor.
+update public.project_members member
+set role = 'editor'
+from qa_backend_context context
+where member.project_id = context.project_id
+  and member.user_id = context.user_id;
+
+set local role authenticated;
+
+with applied as (
+  select result.*
+  from qa_backend_context context
+  cross join lateral public.apply_board_operations(
+    context.second_board_id,
+    context.second_board_version,
+    context.second_operation_id,
+    jsonb_build_array(jsonb_build_object(
+      'type', 'item.create',
+      'payload', jsonb_build_object(
+        'id', context.second_item_id,
+        'section_id', context.second_section_id,
+        'type', 'image',
+        'width', 220,
+        'height', 270,
+        'title', 'QA reused image',
+        'image_path', context.project_id::text || '/' || context.board_id::text || '/qa-first-image.png',
+        'asset_id', context.asset_id
+      )
+    ))
+  ) result
+)
+update qa_backend_context context
+set second_board_version = applied.board_version
+from applied
+where applied.applied;
+
+reset role;
+
+-- A viewer can inspect assets and usages but cannot mutate a board.
+update public.project_members member
+set role = 'viewer'
+from qa_backend_context context
+where member.project_id = context.project_id
+  and member.user_id = context.user_id;
+
+set local role authenticated;
+
+do $$
+declare
+  rejection_message text;
+begin
+  if (
+    select count(*)
+    from qa_backend_context context
+    cross join lateral public.list_asset_usages(
+      context.project_id,
+      array[context.asset_id]
+    ) usage
+  ) <> 2 then
+    raise exception 'QA viewer expected two cross-board asset usages';
+  end if;
+  if not exists (
+    select 1 from public.assets asset
+    join qa_backend_context context on context.asset_id = asset.id
+  ) then
+    raise exception 'QA viewer could not read the project asset';
+  end if;
+
+  begin
+    perform 1
+    from qa_backend_context context
+    cross join lateral public.apply_board_operations(
+      context.second_board_id,
+      context.second_board_version,
+      gen_random_uuid(),
+      '[{"type":"board.update","payload":{"zoom":1}}]'::jsonb
+    ) result;
+  exception when others then
+    get stacked diagnostics rejection_message = message_text;
+  end;
+
+  if rejection_message is null or rejection_message not like 'FORBIDDEN%' then
+    raise exception 'QA expected viewer mutation to be forbidden';
+  end if;
+end;
+$$;
+
+reset role;
+
+update public.project_members member
+set role = 'owner'
+from qa_backend_context context
+where member.project_id = context.project_id
+  and member.user_id = context.user_id;
+
+set local role authenticated;
+
+do $$
+declare
+  rejection_message text;
+begin
+  begin
+    perform 1
+    from qa_backend_context context
+    cross join lateral public.apply_board_operations(
+      context.board_id,
+      context.board_version,
+      context.duplicate_operation_id,
+      jsonb_build_array(jsonb_build_object(
+        'type', 'item.create',
+        'payload', jsonb_build_object(
+          'id', context.duplicate_item_id,
+          'section_id', context.section_id,
+          'type', 'image',
+          'width', 220,
+          'height', 270,
+          'image_path', context.project_id::text || '/' || context.board_id::text || '/qa-first-image.png',
+          'asset_id', context.asset_id
+        )
+      ))
+    ) result;
+  exception when others then
+    get stacked diagnostics rejection_message = message_text;
+  end;
+
+  if rejection_message is null
+    or rejection_message not like 'ASSET_ALREADY_ON_BOARD:%'
+  then
+    raise exception 'QA expected same-board duplicate rejection, got: %', rejection_message;
+  end if;
+  if (select version from public.boards where id = (select board_id from qa_backend_context)) <> 2 then
+    raise exception 'QA duplicate rejection changed the board version';
+  end if;
+end;
+$$;
+
+do $$
+declare
+  rejection_message text;
+begin
+  begin
+    perform 1
+    from qa_backend_context context
+    cross join lateral public.apply_board_operations(
+      context.board_id,
+      context.board_version,
+      context.wrong_path_operation_id,
+      jsonb_build_array(jsonb_build_object(
+        'type', 'item.create',
+        'payload', jsonb_build_object(
+          'id', context.wrong_path_item_id,
+          'section_id', context.section_id,
+          'type', 'image',
+          'width', 220,
+          'height', 270,
+          'image_path', context.project_id::text || '/' || context.board_id::text || '/wrong-path.png',
+          'asset_id', context.asset_id
+        )
+      ))
+    ) result;
+  exception when others then
+    get stacked diagnostics rejection_message = message_text;
+  end;
+
+  if rejection_message is null
+    or rejection_message not like 'VALIDATION_ERROR: asset path mismatch%'
+  then
+    raise exception 'QA expected asset path rejection, got: %', rejection_message;
+  end if;
+end;
+$$;
+
+with created as (
   select * from public.create_project_with_board(
     'QA foreign asset ' || gen_random_uuid()::text,
     'Prueba de aislamiento de assets'
@@ -301,7 +520,7 @@ begin
   end;
 
   if rejection_message is null
-    or rejection_message not like 'VALIDATION_ERROR: asset board mismatch%'
+    or rejection_message not like 'VALIDATION_ERROR: asset project mismatch%'
   then
     raise exception 'QA expected foreign asset rejection, got: %', rejection_message;
   end if;
@@ -361,6 +580,50 @@ set board_version = deleted.board_version
 from deleted
 where deleted.applied;
 
+do $$
+declare
+  rejection_message text;
+begin
+  begin
+    perform public.mark_asset_deleted((select asset_id from qa_backend_context));
+  exception when others then
+    get stacked diagnostics rejection_message = message_text;
+  end;
+
+  if rejection_message is null or rejection_message not like 'ASSET_IN_USE%' then
+    raise exception 'QA expected the second board usage to keep ASSET_IN_USE';
+  end if;
+  if (
+    select count(*)
+    from qa_backend_context context
+    cross join lateral public.list_asset_usages(
+      context.project_id,
+      array[context.asset_id]
+    ) usage
+  ) <> 1 then
+    raise exception 'QA expected one usage after deleting the first placement';
+  end if;
+end;
+$$;
+
+with deleted as (
+  select result.*
+  from qa_backend_context context
+  cross join lateral public.apply_board_operations(
+    context.second_board_id,
+    context.second_board_version,
+    context.second_delete_operation_id,
+    jsonb_build_array(jsonb_build_object(
+      'type', 'item.delete',
+      'payload', jsonb_build_object('id', context.second_item_id)
+    ))
+  ) result
+)
+update qa_backend_context context
+set second_board_version = deleted.board_version
+from deleted
+where deleted.applied;
+
 select public.mark_asset_deleted(asset_id)
 from qa_backend_context;
 
@@ -368,6 +631,9 @@ do $$
 begin
   if (select board_version from qa_backend_context) <> 3 then
     raise exception 'QA item deletion did not advance the board to version 3';
+  end if;
+  if (select second_board_version from qa_backend_context) <> 3 then
+    raise exception 'QA second item deletion did not advance its board to version 3';
   end if;
   if not exists (
     select 1 from public.board_items item
@@ -383,11 +649,27 @@ begin
   ) then
     raise exception 'QA asset deletion after item removal failed';
   end if;
+  if exists (
+    select 1
+    from qa_backend_context context
+    cross join lateral public.list_asset_usages(
+      context.project_id,
+      array[context.asset_id]
+    ) usage
+  ) then
+    raise exception 'QA deleted asset still reports active usages';
+  end if;
   if (
     select count(*) from public.board_operation_batches batch
     join qa_backend_context context on context.board_id = batch.board_id
   ) <> 2 then
     raise exception 'QA expected exactly two operation batches';
+  end if;
+  if (
+    select count(*) from public.board_operation_batches batch
+    join qa_backend_context context on context.second_board_id = batch.board_id
+  ) <> 2 then
+    raise exception 'QA expected exactly two second-board operation batches';
   end if;
 end;
 $$;
@@ -461,12 +743,29 @@ select set_config(
 );
 
 do $$
+declare
+  rejection_message text;
 begin
   if exists (
     select 1 from public.projects
     where id = (select project_id from qa_backend_context)
   ) then
     raise exception 'QA RLS exposed a project to a non-member';
+  end if;
+
+  begin
+    perform 1
+    from qa_backend_context context
+    cross join lateral public.list_asset_usages(
+      context.project_id,
+      array[context.asset_id]
+    ) usage;
+  exception when others then
+    get stacked diagnostics rejection_message = message_text;
+  end;
+
+  if rejection_message is null or rejection_message not like 'FORBIDDEN%' then
+    raise exception 'QA expected asset usages to reject a non-member';
   end if;
 end;
 $$;

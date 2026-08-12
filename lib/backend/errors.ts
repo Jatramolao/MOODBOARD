@@ -10,6 +10,7 @@ const knownCodes: BackendErrorCode[] = [
   "QUOTA_EXCEEDED",
   "INVITATION_EXPIRED",
   "INVITATION_EMAIL_MISMATCH",
+  "ASSET_ALREADY_ON_BOARD",
   "ASSET_IN_USE",
   "CONFLICT",
 ];

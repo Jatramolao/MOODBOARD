@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createdBoardId, mapBoard, mapComment, mapProject } from "../../lib/backend/mappers.ts";
+import { createdBoardId, mapAsset, mapAssetUsage, mapBoard, mapComment, mapProject } from "../../lib/backend/mappers.ts";
 
 test("obtiene el tablero creado desde respuestas escalares o tabulares", () => {
   assert.equal(createdBoardId("board-scalar"), "board-scalar");
@@ -70,4 +70,40 @@ test("preserva anclas y borrado lógico de comentarios", () => {
   assert.equal(comment.positionX, 415.5);
   assert.equal(comment.positionY, 230);
   assert.ok(comment.deletedAt);
+});
+
+test("trata board_id del activo como origen informativo y mapea sus usos", () => {
+  const asset = mapAsset({
+    id: "asset-1",
+    project_id: "project-1",
+    board_id: "origin-board",
+    storage_path: "project-1/origin-board/image.webp",
+    original_name: "image.webp",
+    mime_type: "image/webp",
+    byte_size: "2048",
+    width: "800",
+    height: "600",
+    status: "ready",
+    created_at: "2026-08-12T10:00:00Z",
+    deleted_at: null,
+  });
+  const usage = mapAssetUsage({
+    asset_id: "asset-1",
+    board_id: "board-2",
+    board_name: "Makeup",
+    item_id: "item-2",
+    item_title: null,
+    item_created_at: "2026-08-12T11:00:00Z",
+  });
+
+  assert.equal(asset.originBoardId, "origin-board");
+  assert.equal("boardId" in asset, false);
+  assert.deepEqual(usage, {
+    assetId: "asset-1",
+    boardId: "board-2",
+    boardName: "Makeup",
+    itemId: "item-2",
+    itemTitle: null,
+    itemCreatedAt: "2026-08-12T11:00:00Z",
+  });
 });
