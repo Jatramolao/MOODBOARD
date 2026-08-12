@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-Última actualización: 8 de agosto de 2026.
+Última actualización: 11 de agosto de 2026.
 
 ## Fase activa
 
@@ -22,17 +22,16 @@ corregir y volver a aprobar la primera imagen de un tablero vacío.
 
 ## Base confirmada
 
-- Rama actual: `codex/001-first-image-backend`, publicada en GitHub y enlazada
-  con `origin/codex/001-first-image-backend`; contiene los handoffs backend y
-  frontend y la validación remota 1B hasta `21f8503`. `main`/`origin/main`
-  permanecen como base de producción en `55b707c`.
+- Rama actual: `main`, sincronizada con `origin/main`. La integración de
+  `codex/001-first-image-backend` entró por fast-forward hasta `a681b6c`, sin
+  divergencias ni conflictos.
 - Backend v1: commit local `f6af218`.
 - Corrección backend de tokens `pgcrypto`: commit local `746acbf`.
 - Frontend colaborativo v1: commit local `fec5fc6`.
 - Corrección frontend M1A: commit local `5f2b2f9`.
 - Compensación frontend 1B: commit local `4a4fdac`.
-- GitHub: `origin/main` contiene los cambios colaborativos y la planificación
-  canónica hasta `55b707c`; los ajustes 1A/1B siguen sólo en la rama activa.
+- GitHub: `origin/main` contiene los ajustes backend/frontend 1A/1B, sus
+  regresiones y la documentación de integración hasta `a681b6c`.
 - Migración `202608030001_backend_v1.sql`: aplicada en Supabase.
 - Prueba SQL transaccional: aprobada.
 - Suite backend: 8/8 pruebas aprobadas.
@@ -181,11 +180,12 @@ si `item.create + asset_id` introduce un bloqueo backend distinto.
 
 ## Estado y pendientes de nube
 
-- GitHub `main` contiene el trabajo desarrollado, incluido `e3138c6`.
+- GitHub `main` contiene la integración completa 1A/1B hasta `a681b6c`.
 - La integración Git de Vercel está activa mediante `.vercel/repo.json` para
   `Jatramolao/MOODBOARD` y la rama `main` despliega a producción.
-- El deployment Production generado desde `e3138c6` está `Ready` con alias
-  `moodboard-fotografo.vercel.app`.
+- El deployment Production `dpl_CEKGrdWpPnnxhEse1Gk2trowtqPz`, generado desde
+  `a681b6c`, está `Ready` y sirve los alias `moodboard-fotografo.vercel.app` y
+  `moodboard.libraphotos.com`.
 - Smoke público aprobado: `/` responde `307` hacia `/auth`.
 - Configurar en Vercel `SUPABASE_SERVICE_ROLE_KEY` y `CRON_SECRET`.
 - Opcional: configurar `RESEND_API_KEY` y `EMAIL_FROM`; sin ellos se usa enlace
