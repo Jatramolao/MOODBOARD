@@ -9,7 +9,7 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 
 ## Estado ejecutivo
 
-- **Fase**: backend del ciclo 003, biblioteca reutilizable de Referencias
+- **Fase**: gate SQL y handoff frontend del ciclo 003
 - **Rama local**: `codex/003-reference-library-reuse`
 - **GitHub**: `main` y `origin/main` en `5b741b1`
 - **Producción**: deployment `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ`, estado `Ready`
@@ -17,8 +17,8 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 - **Spec 003**: `implementation`
 - **Plan 003**: `in_progress`
 - **Bloqueos de código**: ninguno conocido
-- **Responsable actual**: sesión backend
-- **Frontend**: pendiente del handoff backend
+- **Responsable actual**: backend entrega; próxima sesión frontend
+- **Frontend**: handoff disponible, espera aplicación/validación de migración
 
 ## Cierre del ciclo 002
 
@@ -64,16 +64,28 @@ Producto aprobó avanzar. Las regresiones automáticas y el QA local cubren uso 
 
 ## Próximos pasos
 
-1. Backend audita duplicados activos por tablero y activo
-2. Backend prepara la migración expansiva y las pruebas SQL
-3. Backend documenta el contrato y entrega el handoff frontend
-4. Frontend implementa miniaturas privadas y consulta de usos
-5. Integración ejecuta M003-A antes de habilitar la reinserción
-6. Continuar los paquetes 3 a 5 según `docs/plans/003/README.md`
+1. Autorizar y aplicar `202608120001_enable_project_asset_reuse.sql`
+2. Ejecutar `supabase/tests/backend_v1.sql` y confirmar rollback exitoso
+3. Frontend implementa miniaturas privadas y consulta de usos desde `8290002`
+4. Integración ejecuta M003-A antes de habilitar la reinserción
+5. Continuar los paquetes 3 a 5 según `docs/plans/003/README.md`
 
 La aprobación habilita trabajo local. Las migraciones productivas, push, merge y despliegue necesitan autorizaciones independientes.
 
 Backend y frontend no trabajan este contrato en paralelo. Frontend puede leer la spec y preparar casos de prueba, pero espera el handoff antes de editar código.
+
+## Entrega backend del ciclo 003
+
+- Commit: `8290002 feat(backend): enable project asset reuse`
+- Auditoría productiva de solo lectura: 3 usos activos y 0 grupos duplicados
+- Migración expansiva preparada; no aplicada
+- `assets.board_id` pasa a `originBoardId` informativo y `ON DELETE SET NULL`
+- Reutilización permitida entre tableros del mismo proyecto
+- Duplicados activos protegidos por trigger serializado e índice parcial único
+- RPC `list_asset_usages` disponible para owner, editor y viewer
+- Error estable `ASSET_ALREADY_ON_BOARD:<item_id>`
+- Pruebas locales: 35/35; HTTP 3/3; build aprobado
+- Prueba SQL ampliada, pendiente de ejecución después de la migración
 
 ## Alcance aprobado del ciclo 003
 

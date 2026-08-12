@@ -13,6 +13,10 @@ Prerequisito cumplido: ciclo 002 aprobado por producto el 12 de agosto de 2026
 
 Inicio de implementación autorizado: 12 de agosto de 2026
 
+Backend implementado localmente: `8290002`. Auditoría productiva de solo
+lectura: 3 usos activos, 0 grupos duplicados. La migración y la validación SQL
+en Supabase permanecen pendientes de autorización independiente.
+
 Esta spec convierte Referencias en una biblioteca reutilizable del proyecto. El ciclo agrega miniaturas privadas, reinserción en el tablero y localización de usos sin duplicar archivos.
 
 ## Resolver el problema

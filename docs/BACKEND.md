@@ -9,6 +9,10 @@ El backend colaborativo v1 y sus correcciones están aplicados en Supabase. La
 migración de consistencia de activos fue aplicada y validada el 8 de agosto de
 2026.
 
+El contrato expansivo de biblioteca reutilizable está implementado en el
+commit `8290002` y pendiente de aplicar en Supabase. La auditoría productiva de
+solo lectura del 12 de agosto encontró 3 usos activos y 0 grupos duplicados.
+
 ## Alcance
 
 El backend soporta el ciclo completo de una primera versión de producto:
@@ -79,7 +83,33 @@ en el límite de base de datos para `board_items`:
 - exige que `image_path` coincida con `assets.storage_path`.
 
 Esta validación evita el fallo de la primera imagen y la asociación de un
-elemento con un activo ajeno.
+elemento con un activo ajeno. La exigencia de compartir tablero permanece en
+producción hasta aplicar la migración 003; después se conserva sólo la
+pertenencia al mismo proyecto.
+
+### Biblioteca reutilizable del proyecto
+
+La migración `202608120001_enable_project_asset_reuse.sql` amplía el contrato:
+
+- `assets.project_id` continúa siendo el propietario funcional;
+- `assets.board_id` pasa a ser el tablero de origen informativo y usa
+  `ON DELETE SET NULL`;
+- un activo `ready` puede vincularse a cualquier tablero del mismo proyecto;
+- `image_path` debe coincidir siempre con `assets.storage_path`;
+- sólo puede existir un `board_item` activo por combinación de tablero y
+  activo;
+- el trigger serializa colocaciones concurrentes y devuelve
+  `ASSET_ALREADY_ON_BOARD:<item_id>`;
+- el reintento con el mismo `operation_id` conserva la idempotencia existente.
+
+La migración ejecuta una auditoría bloqueante antes de crear el índice único.
+Si detecta duplicados, devuelve `ASSET_REUSE_DUPLICATES` con los IDs afectados
+y revierte todo el cambio; nunca elimina ni combina tarjetas automáticamente.
+
+`list_asset_usages(project_id, asset_ids[])` entrega `asset_id`, `board_id`,
+`board_name`, `item_id`, `item_title` e `item_created_at`. Cualquier miembro del
+proyecto puede consultar usos. Owner y editor pueden crear tarjetas mediante
+`apply_board_operations`; viewer no puede mutarlas.
 
 ## Funciones RPC públicas
 
@@ -120,6 +150,7 @@ elemento con un activo ajeno.
 
 - `register_asset`
 - `mark_asset_deleted`
+- `list_asset_usages`
 - `mark_notification_read`
 - `mark_all_notifications_read`
 
@@ -147,6 +178,7 @@ VERSION_CONFLICT          409, reintentable tras recarga
 CONFLICT                  409
 QUOTA_EXCEEDED            409
 ASSET_IN_USE              409
+ASSET_ALREADY_ON_BOARD    409
 RATE_LIMITED              429, reintentable
 ```
 
@@ -168,6 +200,10 @@ RATE_LIMITED              429, reintentable
   `supabase/migrations/202608030002_fix_pgcrypto_search_path.sql`
 - Consistencia entre elemento y activo, aplicada en Supabase:
   `supabase/migrations/202608080001_validate_board_item_assets.sql`
+- Biblioteca reutilizable por proyecto, pendiente de aplicar en Supabase:
+  `supabase/migrations/202608120001_enable_project_asset_reuse.sql`
+- Auditoría manual de duplicados:
+  `supabase/tests/reference_library_preflight.sql`
 - Integración SQL: `supabase/tests/backend_v1.sql`
 - Pruebas TypeScript: `tests/backend/*.test.ts`
 
@@ -176,3 +212,8 @@ RLS, bootstrap de proyecto, primera imagen con activo, normalización de paleta,
 rechazo de activos de otro tablero, idempotencia, protección `ASSET_IN_USE`,
 borrado lógico, generación y resolución de tokens, y comentarios compartidos
 sin dejar datos.
+
+La ampliación 003 agrega reutilización en dos tableros, duplicado en el mismo
+tablero, ruta incorrecta, activo de otro proyecto, bloqueo con uno y dos usos,
+eliminación después del último uso y permisos de owner, editor, viewer y no
+miembro.

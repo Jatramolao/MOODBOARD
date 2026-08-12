@@ -18,8 +18,8 @@ Este plan ordena backend, frontend e integración para habilitar miniaturas y re
 | Paquete | Estado | Responsable |
 |---|---|---|
 | 0, cierre y aprobación | Completado | Planificación e integración |
-| 1, contrato backend | En ejecución | Backend |
-| 2, biblioteca y miniaturas | Pendiente de handoff | Frontend |
+| 1, contrato backend | Implementado; gate SQL pendiente | Backend |
+| 2, biblioteca y miniaturas | Handoff disponible; espera gate SQL | Frontend |
 | 3, reinserción entre tableros | Pendiente | Frontend e integración |
 | 4, usos y eliminación | Pendiente | Frontend e integración |
 | 5, publicación | Pendiente | Integración y despliegue |
@@ -77,6 +77,12 @@ Pruebas backend obligatorias:
 - RLS para owner, editor y viewer
 
 Puerta técnica: pruebas backend y SQL aprobadas. No requiere una prueba manual de interfaz.
+
+Estado del 12 de agosto de 2026: implementación y pruebas locales completas en
+`8290002`. Auditoría productiva de solo lectura aprobada con 3 usos activos y
+0 grupos duplicados. Falta autorización para aplicar la migración y ejecutar
+la prueba SQL transaccional; hasta entonces la puerta técnica permanece
+pendiente.
 
 ### Entregar el handoff frontend
 
