@@ -72,6 +72,16 @@ test("explica cuotas y permisos con acciones comprensibles", () => {
   );
 });
 
+test("la sesión expirada usa un mensaje global que no presupone mutaciones", () => {
+  const message = frontendErrorMessage(
+    { code: "UNAUTHORIZED", message: "UNAUTHORIZED", retryable: false },
+    "Error",
+  );
+
+  assert.equal(message, "Tu sesión expiró. Vuelve a ingresar para continuar.");
+  assert.doesNotMatch(message, /tarjeta|referencia/i);
+});
+
 test("acepta destinos internos y rechaza redirecciones externas", () => {
   assert.equal(safeDestination("/invite?token=abc"), "/invite?token=abc");
   assert.equal(safeDestination("//evil.example/path"), "/");

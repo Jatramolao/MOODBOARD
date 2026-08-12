@@ -519,6 +519,8 @@ export function BoardProvider({
         const mapped = readBackendError(outcome.cause);
         const detail = mapped.code === "ASSET_IN_USE"
           ? "La imagen todavía se usa en otro lugar."
+          : mapped.code === "UNAUTHORIZED"
+            ? "Tu sesión expiró; vuelve a ingresar para completar la limpieza."
           : frontendErrorMessage(outcome.cause, "No pudimos eliminar el archivo.");
         return {
           status: "reference-retained" as const,
