@@ -5,11 +5,13 @@ meta:
 
 # Reutilizar referencias en cualquier tablero
 
-Estado: `approved`
+Estado: `implementation`
 
 Rama: `codex/003-reference-library-reuse`
 
 Prerequisito cumplido: ciclo 002 aprobado por producto el 12 de agosto de 2026
+
+Inicio de implementación autorizado: 12 de agosto de 2026
 
 Esta spec convierte Referencias en una biblioteca reutilizable del proyecto. El ciclo agrega miniaturas privadas, reinserción en el tablero y localización de usos sin duplicar archivos.
 
@@ -136,4 +138,6 @@ Backend usa una migración expansiva antes del frontend. El cliente vigente cont
 
 Si frontend falla, revierte su commit y conserva la migración expansiva. No restaures la restricción por tablero mientras existan usos cruzados; corrige hacia delante cualquier problema posterior.
 
-La aprobación autoriza iniciar el trabajo local por capas. No autoriza migraciones productivas, push ni despliegue. Cada acción mantiene su puerta independiente.
+La implementación comienza por backend. Frontend espera el contrato y el handoff backend antes de editar el flujo de Referencias.
+
+La autorización permite trabajo local por capas. No autoriza migraciones productivas, push ni despliegue. Cada acción mantiene su puerta independiente.

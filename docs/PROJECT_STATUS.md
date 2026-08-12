@@ -14,9 +14,11 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 - **GitHub**: `main` y `origin/main` en `5b741b1`
 - **Producción**: deployment `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ`, estado `Ready`
 - **Ciclo 002**: aprobado manualmente y cerrado por producto
-- **Spec 003**: `approved`
+- **Spec 003**: `implementation`
+- **Plan 003**: `in_progress`
 - **Bloqueos de código**: ninguno conocido
-- **Responsable siguiente**: sesión backend
+- **Responsable actual**: sesión backend
+- **Frontend**: pendiente del handoff backend
 
 ## Cierre del ciclo 002
 
@@ -70,6 +72,8 @@ Producto aprobó avanzar. Las regresiones automáticas y el QA local cubren uso 
 6. Continuar los paquetes 3 a 5 según `docs/plans/003/README.md`
 
 La aprobación habilita trabajo local. Las migraciones productivas, push, merge y despliegue necesitan autorizaciones independientes.
+
+Backend y frontend no trabajan este contrato en paralelo. Frontend puede leer la spec y preparar casos de prueba, pero espera el handoff antes de editar código.
 
 ## Alcance aprobado del ciclo 003
 

@@ -5,13 +5,24 @@ meta:
 
 # Implementar la biblioteca reutilizable de referencias
 
-Estado: `approved`
+Estado: `in_progress`
 
 Spec: `docs/specs/003-reference-library-reuse.md`
 
 Prerequisito cumplido: M002 aprobada y ciclo 002 cerrado
 
 Este plan ordena backend, frontend e integración para habilitar miniaturas y reutilización entre tableros con el menor cambio transversal. Cada paquete funcional termina con una prueba manual antes de habilitar el siguiente.
+
+## Consultar el estado de ejecución
+
+| Paquete | Estado | Responsable |
+|---|---|---|
+| 0, cierre y aprobación | Completado | Planificación e integración |
+| 1, contrato backend | En ejecución | Backend |
+| 2, biblioteca y miniaturas | Pendiente de handoff | Frontend |
+| 3, reinserción entre tableros | Pendiente | Frontend e integración |
+| 4, usos y eliminación | Pendiente | Frontend e integración |
+| 5, publicación | Pendiente | Integración y despliegue |
 
 ## Mantener el orden de trabajo
 
@@ -66,6 +77,22 @@ Pruebas backend obligatorias:
 - RLS para owner, editor y viewer
 
 Puerta técnica: pruebas backend y SQL aprobadas. No requiere una prueba manual de interfaz.
+
+### Entregar el handoff frontend
+
+El handoff backend debe registrar:
+
+- Migración y commit backend
+- Auditoría de duplicados y decisión aplicada
+- Forma de la consulta de usos
+- Forma de activos con URL firmada o método para obtenerla
+- Semántica de `originBoardId`
+- Código `ASSET_ALREADY_ON_BOARD`
+- Permisos de owner, editor y viewer
+- Pruebas aprobadas
+- Migración productiva pendiente de autorización
+
+Frontend no modifica migraciones, triggers ni políticas durante esta fase.
 
 ## Paquete 2: mostrar la biblioteca real
 
