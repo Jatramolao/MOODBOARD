@@ -10,9 +10,9 @@ Esta referencia define los límites estables del frontend. Consulta `docs/PROJEC
 ## Consumir el handoff del ciclo 003
 
 Backend preparó la biblioteca reutilizable en `8290002`. La migración
-`202608120001_enable_project_asset_reuse.sql` todavía no está aplicada en
-Supabase; no ejecutes la puerta manual ni publiques el cliente antes de ese
-gate. La implementación frontend sí puede comenzar sobre este contrato.
+`202608120001_enable_project_asset_reuse.sql` fue aplicada y validada en
+Supabase el 13 de agosto de 2026. El contrato está habilitado para ejecutar
+M003-A a M003-E; la publicación del cliente conserva su gate independiente.
 
 `AssetRecord` expone `originBoardId`. Sólo identifica el tablero donde se
 subió el archivo por primera vez; no limita dónde puede usarse. Consulta usos

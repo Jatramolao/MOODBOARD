@@ -10,8 +10,8 @@ migración de consistencia de activos fue aplicada y validada el 8 de agosto de
 2026.
 
 El contrato expansivo de biblioteca reutilizable está implementado en el
-commit `8290002` y pendiente de aplicar en Supabase. La auditoría productiva de
-solo lectura del 12 de agosto encontró 3 usos activos y 0 grupos duplicados.
+commit `8290002`, aplicado y validado en Supabase el 13 de agosto de 2026. El
+preflight inmediato encontró 3 usos activos y 0 grupos duplicados.
 
 ## Alcance
 
@@ -83,9 +83,8 @@ en el límite de base de datos para `board_items`:
 - exige que `image_path` coincida con `assets.storage_path`.
 
 Esta validación evita el fallo de la primera imagen y la asociación de un
-elemento con un activo ajeno. La exigencia de compartir tablero permanece en
-producción hasta aplicar la migración 003; después se conserva sólo la
-pertenencia al mismo proyecto.
+elemento con un activo ajeno. La migración 003 reemplazó la exigencia de
+compartir tablero por pertenencia al mismo proyecto.
 
 ### Biblioteca reutilizable del proyecto
 
@@ -200,7 +199,7 @@ RATE_LIMITED              429, reintentable
   `supabase/migrations/202608030002_fix_pgcrypto_search_path.sql`
 - Consistencia entre elemento y activo, aplicada en Supabase:
   `supabase/migrations/202608080001_validate_board_item_assets.sql`
-- Biblioteca reutilizable por proyecto, pendiente de aplicar en Supabase:
+- Biblioteca reutilizable por proyecto, aplicada en Supabase:
   `supabase/migrations/202608120001_enable_project_asset_reuse.sql`
 - Auditoría manual de duplicados:
   `supabase/tests/reference_library_preflight.sql`

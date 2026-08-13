@@ -5,7 +5,21 @@ meta:
 
 # Comprobar la calidad vigente
 
-Este informe registra el cierre del ciclo 002 y la línea base del ciclo 003. Última actualización: 12 de agosto de 2026.
+Este informe registra el cierre del ciclo 002 y la validación activa del ciclo 003. Última actualización: 13 de agosto de 2026.
+
+## Gate backend del ciclo 003
+
+| Verificación | Resultado |
+|---|---|
+| Preflight productivo | Aprobado: 3 usos activos, 0 grupos duplicados |
+| Migración `202608120001` | Aplicada correctamente en Supabase |
+| Suite SQL transaccional | Aprobada: `backend_v1 QA passed` |
+| Suite backend/frontend posterior | Aprobada, 39 de 39 |
+| Suite HTTP posterior | Aprobada, 3 de 3 en `localhost:3001` |
+| TypeScript, ESLint y build | Aprobados |
+| Datos QA de la suite SQL | Ninguno persistido; terminó en rollback |
+
+Quedan pendientes las puertas manuales M003-A a M003-E y el smoke del preview.
 
 ## Cierre manual del ciclo 002
 

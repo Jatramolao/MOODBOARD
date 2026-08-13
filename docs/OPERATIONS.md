@@ -31,7 +31,7 @@ Ninguna variable server-only puede usar el prefijo `NEXT_PUBLIC_`.
 ## Orden de despliegue
 
 1. Aplicar las migraciones Supabase en orden hasta
-   `202608080001_validate_board_item_assets.sql`.
+   `202608120001_enable_project_asset_reuse.sql`.
 2. Ejecutar `supabase/tests/backend_v1.sql` y confirmar
    `backend_v1 QA passed`.
 3. Configurar variables Vercel en Production y Preview.
@@ -81,3 +81,9 @@ hacia delante.
 
 Las migraciones vigentes fueron aplicadas y validadas en Supabase. Corrige
 hacia delante cualquier incidente de datos o permisos.
+
+La migración 003 es expansiva. Antes de aplicarla en otro entorno ejecuta
+`supabase/tests/reference_library_preflight.sql`; debe devolver cero filas. Si
+informa `ASSET_REUSE_DUPLICATES`, resuelve manualmente los usos duplicados y
+reintenta. No elimines tarjetas automáticamente. Una vez aplicada, ejecuta
+`supabase/tests/backend_v1.sql` y exige `backend_v1 QA passed`.

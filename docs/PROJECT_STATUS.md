@@ -5,20 +5,20 @@ meta:
 
 # Entender el estado actual del proyecto
 
-Este documento resume la fase activa, la base publicada y las acciones necesarias para cerrar el ciclo. Última actualización: 12 de agosto de 2026.
+Este documento resume la fase activa, la base publicada y las acciones necesarias para cerrar el ciclo. Última actualización: 13 de agosto de 2026.
 
 ## Estado ejecutivo
 
-- **Fase**: gate SQL y handoff a integración del ciclo 003
+- **Fase**: integración y puertas manuales M003
 - **Rama local**: `codex/003-reference-library-reuse`
 - **GitHub**: `main` y `origin/main` en `5b741b1`
 - **Producción**: deployment `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ`, estado `Ready`
 - **Ciclo 002**: aprobado manualmente y cerrado por producto
-- **Spec 003**: `implementation`
+- **Spec 003**: `validation`
 - **Plan 003**: `in_progress`
 - **Bloqueos de código**: ninguno conocido
-- **Bloqueo de entorno**: migración `202608120001` aún no aplicada
-- **Responsable actual**: operaciones habilita el gate SQL; integración ejecuta M003
+- **Bloqueo de entorno**: ninguno conocido
+- **Responsable actual**: integración ejecuta M003-A a M003-E
 - **Frontend**: paquetes 2 a 4 implementados localmente en `2b131b3`
 
 ## Cierre del ciclo 002
@@ -56,8 +56,8 @@ Producto aprobó avanzar. Las regresiones automáticas y el QA local cubren uso 
 
 ## Estado de plataforma
 
-- Supabase contiene las migraciones `202607310001` a `202608080001`
-- La migración de consistencia de activos está aplicada y validada
+- Supabase contiene las migraciones `202607310001` a `202608120001`
+- La migración de biblioteca reutilizable fue aplicada y validada el 13 de agosto
 - Vercel despliega `main` automáticamente
 - Producción sirve `moodboard-fotografo.vercel.app` y `moodboard.libraphotos.com`
 - `SUPABASE_SERVICE_ROLE_KEY` y `CRON_SECRET` deben permanecer configurados como variables de servidor
@@ -65,11 +65,10 @@ Producto aprobó avanzar. Las regresiones automáticas y el QA local cubren uso 
 
 ## Próximos pasos
 
-1. Autorizar y aplicar `202608120001_enable_project_asset_reuse.sql`
-2. Ejecutar `supabase/tests/backend_v1.sql` y confirmar rollback exitoso
-3. Integración ejecuta M003-A a M003-E sobre `2b131b3`
-4. Corregir hacia delante cualquier hallazgo y completar pruebas HTTP/E2E
-5. Solicitar autorizaciones independientes para push, preview y publicación
+1. Integración ejecuta M003-A a M003-E sobre `2b131b3`
+2. Corregir hacia delante cualquier hallazgo y completar pruebas HTTP/E2E
+3. Solicitar autorizaciones independientes para push y preview
+4. Ejecutar smoke de preview y solicitar merge/despliegue
 
 La aprobación habilita trabajo local. Las migraciones productivas, push, merge y despliegue necesitan autorizaciones independientes.
 
@@ -88,20 +87,22 @@ Backend y frontend no trabajan este contrato en paralelo. Frontend puede leer la
 - Owner y editor mutan; viewer conserva miniaturas y usos en sólo lectura
 - Pruebas locales: 39/39; TypeScript, ESLint, build y `git diff --check` aprobados
 - Revisión autenticada sin errores de consola y sin desborde en 390, 768, 1280 y 1440 px
-- M003 no ejecutada: el entorno todavía no expone `list_asset_usages`
+- M003 todavía no ejecutada; el backend ya expone `list_asset_usages` y la
+  puerta queda habilitada para integración
 
 ## Entrega backend del ciclo 003
 
 - Commit: `8290002 feat(backend): enable project asset reuse`
 - Auditoría productiva de solo lectura: 3 usos activos y 0 grupos duplicados
-- Migración expansiva preparada; no aplicada
+- Migración expansiva aplicada en Supabase el 13 de agosto de 2026
 - `assets.board_id` pasa a `originBoardId` informativo y `ON DELETE SET NULL`
 - Reutilización permitida entre tableros del mismo proyecto
 - Duplicados activos protegidos por trigger serializado e índice parcial único
 - RPC `list_asset_usages` disponible para owner, editor y viewer
 - Error estable `ASSET_ALREADY_ON_BOARD:<item_id>`
 - Pruebas locales: 35/35; HTTP 3/3; build aprobado
-- Prueba SQL ampliada, pendiente de ejecución después de la migración
+- Prueba SQL transaccional aprobada: `backend_v1 QA passed`
+- Validación conjunta posterior: 39/39, HTTP 3/3 y build aprobado
 
 ## Alcance aprobado del ciclo 003
 

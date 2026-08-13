@@ -18,7 +18,7 @@ Este plan ordena backend, frontend e integración para habilitar miniaturas y re
 | Paquete | Estado | Responsable |
 |---|---|---|
 | 0, cierre y aprobación | Completado | Planificación e integración |
-| 1, contrato backend | Implementado; gate SQL pendiente | Backend |
+| 1, contrato backend | Completado y validado en Supabase | Backend/operaciones |
 | 2, biblioteca y miniaturas | Implementado localmente; M003-A pendiente | Integración |
 | 3, reinserción entre tableros | Implementado localmente; M003-B/C pendiente | Integración |
 | 4, usos y eliminación | Implementado localmente; M003-D/E pendiente | Integración |
@@ -78,11 +78,9 @@ Pruebas backend obligatorias:
 
 Puerta técnica: pruebas backend y SQL aprobadas. No requiere una prueba manual de interfaz.
 
-Estado del 12 de agosto de 2026: implementación y pruebas locales completas en
-`8290002`. Auditoría productiva de solo lectura aprobada con 3 usos activos y
-0 grupos duplicados. Falta autorización para aplicar la migración y ejecutar
-la prueba SQL transaccional; hasta entonces la puerta técnica permanece
-pendiente.
+Estado del 13 de agosto de 2026: implementación `8290002`, preflight con 3 usos
+activos y 0 duplicados, migración aplicada y prueba transaccional aprobada con
+`backend_v1 QA passed`. La puerta técnica está completa.
 
 ### Entregar el handoff frontend
 
@@ -120,8 +118,8 @@ Puerta manual M003-A:
 
 No avances al paquete 3 si una referencia lista pierde su miniatura o expone una URL pública.
 
-Estado local: implementado en `2b131b3`. La puerta M003-A permanece bloqueada
-hasta aplicar y validar la migración expansiva.
+Estado local: implementado en `2b131b3`. La migración expansiva está validada;
+M003-A queda habilitada para integración.
 
 ## Paquete 3: reutilizar en tableros
 
