@@ -19,9 +19,9 @@ Este plan ordena backend, frontend e integración para habilitar miniaturas y re
 |---|---|---|
 | 0, cierre y aprobación | Completado | Planificación e integración |
 | 1, contrato backend | Implementado; gate SQL pendiente | Backend |
-| 2, biblioteca y miniaturas | Handoff disponible; espera gate SQL | Frontend |
-| 3, reinserción entre tableros | Pendiente | Frontend e integración |
-| 4, usos y eliminación | Pendiente | Frontend e integración |
+| 2, biblioteca y miniaturas | Implementado localmente; M003-A pendiente | Integración |
+| 3, reinserción entre tableros | Implementado localmente; M003-B/C pendiente | Integración |
+| 4, usos y eliminación | Implementado localmente; M003-D/E pendiente | Integración |
 | 5, publicación | Pendiente | Integración y despliegue |
 
 ## Mantener el orden de trabajo
@@ -120,6 +120,9 @@ Puerta manual M003-A:
 
 No avances al paquete 3 si una referencia lista pierde su miniatura o expone una URL pública.
 
+Estado local: implementado en `2b131b3`. La puerta M003-A permanece bloqueada
+hasta aplicar y validar la migración expansiva.
+
 ## Paquete 3: reutilizar en tableros
 
 Responsable: frontend e integración.
@@ -144,6 +147,8 @@ Puerta manual M003-C:
 - Recargar ambos tableros
 - Confirmar un uso en cada tablero
 
+Estado local: implementación completada en `2b131b3`; puertas M003-B/C pendientes.
+
 ## Paquete 4: localizar usos y proteger eliminación
 
 Responsable: frontend e integración.
@@ -166,6 +171,8 @@ Puerta manual M003-E:
 - Validar owner, editor y viewer
 - Interrumpir la red durante firmado y guardado
 - Recargar y confirmar un estado coherente
+
+Estado local: implementación completada en `2b131b3`; puertas M003-D/E pendientes.
 
 ## Paquete 5: integrar y publicar
 

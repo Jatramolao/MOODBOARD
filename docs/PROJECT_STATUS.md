@@ -9,7 +9,7 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 
 ## Estado ejecutivo
 
-- **Fase**: gate SQL y handoff frontend del ciclo 003
+- **Fase**: gate SQL y handoff a integración del ciclo 003
 - **Rama local**: `codex/003-reference-library-reuse`
 - **GitHub**: `main` y `origin/main` en `5b741b1`
 - **Producción**: deployment `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ`, estado `Ready`
@@ -17,8 +17,9 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 - **Spec 003**: `implementation`
 - **Plan 003**: `in_progress`
 - **Bloqueos de código**: ninguno conocido
-- **Responsable actual**: backend entrega; próxima sesión frontend
-- **Frontend**: handoff disponible, espera aplicación/validación de migración
+- **Bloqueo de entorno**: migración `202608120001` aún no aplicada
+- **Responsable actual**: operaciones habilita el gate SQL; integración ejecuta M003
+- **Frontend**: paquetes 2 a 4 implementados localmente en `2b131b3`
 
 ## Cierre del ciclo 002
 
@@ -66,13 +67,28 @@ Producto aprobó avanzar. Las regresiones automáticas y el QA local cubren uso 
 
 1. Autorizar y aplicar `202608120001_enable_project_asset_reuse.sql`
 2. Ejecutar `supabase/tests/backend_v1.sql` y confirmar rollback exitoso
-3. Frontend implementa miniaturas privadas y consulta de usos desde `8290002`
-4. Integración ejecuta M003-A antes de habilitar la reinserción
-5. Continuar los paquetes 3 a 5 según `docs/plans/003/README.md`
+3. Integración ejecuta M003-A a M003-E sobre `2b131b3`
+4. Corregir hacia delante cualquier hallazgo y completar pruebas HTTP/E2E
+5. Solicitar autorizaciones independientes para push, preview y publicación
 
 La aprobación habilita trabajo local. Las migraciones productivas, push, merge y despliegue necesitan autorizaciones independientes.
 
 Backend y frontend no trabajan este contrato en paralelo. Frontend puede leer la spec y preparar casos de prueba, pero espera el handoff antes de editar código.
+
+## Entrega frontend del ciclo 003
+
+- Commit: `2b131b3 feat(frontend): add reusable reference library`
+- Firmado privado en lote desde la capa de datos, sin URLs públicas
+- Renovación de miniaturas al recargar y una vez automáticamente al vencer
+- Estados separados para carga, vacío, error general y fallo de miniatura
+- `Añadir al tablero` guarda mediante `apply_board_operations` y espera confirmación
+- `ASSET_ALREADY_ON_BOARD` recarga usos y abre la tarjeta existente
+- Lista de usos permite abrir otro tablero y enfocar su tarjeta
+- `ASSET_IN_USE` conserva el activo y actualiza los tableros que bloquean su eliminación
+- Owner y editor mutan; viewer conserva miniaturas y usos en sólo lectura
+- Pruebas locales: 39/39; TypeScript, ESLint, build y `git diff --check` aprobados
+- Revisión autenticada sin errores de consola y sin desborde en 390, 768, 1280 y 1440 px
+- M003 no ejecutada: el entorno todavía no expone `list_asset_usages`
 
 ## Entrega backend del ciclo 003
 
