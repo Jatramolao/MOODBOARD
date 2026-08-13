@@ -19,9 +19,9 @@ Este plan ordena backend, frontend e integración para habilitar miniaturas y re
 |---|---|---|
 | 0, cierre y aprobación | Completado | Planificación e integración |
 | 1, contrato backend | Completado y validado en Supabase | Backend/operaciones |
-| 2, biblioteca y miniaturas | Implementado localmente; M003-A pendiente | Integración |
-| 3, reinserción entre tableros | Implementado localmente; M003-B/C pendiente | Integración |
-| 4, usos y eliminación | Implementado localmente; M003-D/E pendiente | Integración |
+| 2, biblioteca y miniaturas | Completado; M003-A aprobada localmente | Integración |
+| 3, reinserción entre tableros | Completado; M003-B/C aprobadas localmente | Integración |
+| 4, usos y eliminación | M003-D aprobada; M003-E manual parcial | Integración |
 | 5, publicación | Pendiente | Integración y despliegue |
 
 ## Mantener el orden de trabajo
@@ -145,7 +145,8 @@ Puerta manual M003-C:
 - Recargar ambos tableros
 - Confirmar un uso en cada tablero
 
-Estado local: implementación completada en `2b131b3`; puertas M003-B/C pendientes.
+Estado local: implementación completada en `2b131b3`; M003-B/C aprobadas por
+integración el 13 de agosto de 2026.
 
 ## Paquete 4: localizar usos y proteger eliminación
 
@@ -170,7 +171,8 @@ Puerta manual M003-E:
 - Interrumpir la red durante firmado y guardado
 - Recargar y confirmar un estado coherente
 
-Estado local: implementación completada en `2b131b3`; puertas M003-D/E pendientes.
+Estado local: implementación completada en `2b131b3`; M003-D aprobada por
+integración. M003-E conserva perfiles manuales de editor/viewer y corte de red.
 
 ## Paquete 5: integrar y publicar
 

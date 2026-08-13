@@ -9,7 +9,7 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 
 ## Estado ejecutivo
 
-- **Fase**: integración y puertas manuales M003
+- **Fase**: integración completada; cierre manual M003-E pendiente
 - **Rama local**: `codex/003-reference-library-reuse`
 - **GitHub**: `main` y `origin/main` en `5b741b1`
 - **Producción**: deployment `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ`, estado `Ready`
@@ -17,8 +17,8 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 - **Spec 003**: `validation`
 - **Plan 003**: `in_progress`
 - **Bloqueos de código**: ninguno conocido
-- **Bloqueo de entorno**: ninguno conocido
-- **Responsable actual**: integración ejecuta M003-A a M003-E
+- **Bloqueo de entorno**: faltan perfiles manuales separados de editor/viewer y prueba de red
+- **Responsable actual**: integración entrega M003-A a D y prepara M003-E
 - **Frontend**: paquetes 2 a 4 implementados localmente en `2b131b3`
 
 ## Cierre del ciclo 002
@@ -65,8 +65,8 @@ Producto aprobó avanzar. Las regresiones automáticas y el QA local cubren uso 
 
 ## Próximos pasos
 
-1. Integración ejecuta M003-A a M003-E sobre `2b131b3`
-2. Corregir hacia delante cualquier hallazgo y completar pruebas HTTP/E2E
+1. Ejecutar M003-E manual con perfiles separados de editor y viewer
+2. Interrumpir y restaurar red durante firmado y reinserción
 3. Solicitar autorizaciones independientes para push y preview
 4. Ejecutar smoke de preview y solicitar merge/despliegue
 
@@ -87,8 +87,22 @@ Backend y frontend no trabajan este contrato en paralelo. Frontend puede leer la
 - Owner y editor mutan; viewer conserva miniaturas y usos en sólo lectura
 - Pruebas locales: 39/39; TypeScript, ESLint, build y `git diff --check` aprobados
 - Revisión autenticada sin errores de consola y sin desborde en 390, 768, 1280 y 1440 px
-- M003 todavía no ejecutada; el backend ya expone `list_asset_usages` y la
-  puerta queda habilitada para integración
+- M003-A a M003-D aprobadas localmente; M003-E conserva la prueba manual por
+  rol y red antes del preview
+
+## Resultado de integración del ciclo 003
+
+- Miniatura privada conservada después de retirar y recargar
+- Reinserción confirmada sin duplicados y con foco en la tarjeta
+- Reutilización del mismo activo confirmada en dos tableros
+- Navegación desde la lista de usos confirmada con foco y URL saneada
+- `ASSET_IN_USE` conserva la referencia y explica el uso restante
+- Eliminación definitiva confirmada después del último uso
+- Responsive aprobado en 390, 768, 1280 y 1440 px
+- Suite combinada: 40/40; HTTP: 3/3; build y auditoría aprobados
+- Corrección de integración: una biblioteca vacía informa `0 KB`
+- Datos persistidos: queda el proyecto vacío `QA-003 Integración`; sus activos
+  y tarjetas de prueba fueron eliminados
 
 ## Entrega backend del ciclo 003
 

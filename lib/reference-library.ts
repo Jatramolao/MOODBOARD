@@ -8,6 +8,13 @@ const START_Y = 136;
 const GAP = 24;
 const WORLD_HEIGHT = 1040;
 
+export function formatAssetBytes(bytes: number) {
+  if (bytes <= 0) return "0 KB";
+  return bytes < 1024 * 1024
+    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+    : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export function groupAssetUsages(usages: AssetUsage[]) {
   const grouped = new Map<string, AssetUsage[]>();
   usages.forEach((usage) => {

@@ -26,13 +26,12 @@ import type { WorkspaceView } from "./Sidebar";
 import { useBoard } from "./BoardProvider";
 import { createClient } from "@/lib/supabase/client";
 import { frontendErrorMessage, redirectOnUnauthorized } from "@/lib/frontend-errors";
-import { groupAssetUsages } from "@/lib/reference-library";
+import { formatAssetBytes, groupAssetUsages } from "@/lib/reference-library";
 
 export type UtilityPanel = "search" | "comments" | "notifications" | null;
 export type CommentAnchor = { id?: string; title: string; x?: number; y?: number };
 
 const formatDate = (value: string) => new Intl.DateTimeFormat("es-CL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
-const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 const focusBoardCard = (itemId: string) => Array.from(document.querySelectorAll<HTMLElement>("[data-card-id]")).find((element) => element.dataset.cardId === itemId)?.focus();
 
 function SurfaceState({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "error" }) {
@@ -172,18 +171,18 @@ function AssetsPanel({ runtime, onViewChange }: { runtime: Extract<WorkspaceRunt
   if (status === "error") return <main className="content-panel"><SurfaceState tone="error"><span>{message}</span><button className="text-action" type="button" onClick={() => { setStatus("loading"); void load(); }}>Reintentar</button></SurfaceState></main>;
   const bytes = Number(usage?.asset_bytes ?? usage?.assetBytes ?? assets.reduce((sum, asset) => sum + asset.byteSize, 0));
   return <main className="content-panel" id="board-main">
-    <header className="content-panel-header"><div><span>Biblioteca del proyecto</span><h1>Referencias</h1><p>Archivos privados disponibles para todos los tableros del proyecto.</p></div><div className="usage-stat"><strong>{assets.length}</strong><span>activos · {formatBytes(bytes)}</span></div></header>
+    <header className="content-panel-header"><div><span>Biblioteca del proyecto</span><h1>Referencias</h1><p>Archivos privados disponibles para todos los tableros del proyecto.</p></div><div className="usage-stat"><strong>{assets.length}</strong><span>activos · {formatAssetBytes(bytes)}</span></div></header>
     {thumbnailError ? <div className="inline-feedback asset-library-feedback" role="alert"><span>{thumbnailError}</span><button type="button" onClick={() => void load()}>Recargar miniaturas</button></div> : null}
     {message ? <div className="inline-feedback asset-library-feedback" role="status">{message}</div> : null}
-    {assets.length ? <div className="asset-grid">{assets.map((asset) => {
+    {assets.length ? <div className="asset-grid">{assets.map((asset, assetIndex) => {
       const assetUsageList = usagesByAsset.get(asset.id) ?? [];
       const localUsage = assetUsageList.find((item) => item.boardId === runtime.boardId);
       const preview = previewByPath.get(asset.storagePath);
       const boardCount = new Set(assetUsageList.map((item) => item.boardId)).size;
       const busy = busyAssetId === asset.id;
       return <article className="asset-tile" key={asset.id} aria-busy={busy || undefined}>
-        <div className="asset-preview">{preview ? <Image src={preview} alt={asset.originalName} fill unoptimized sizes="(max-width: 640px) 50vw, 260px" onError={() => void renewThumbnail(asset, true)} /> : <><FileImage size={30} weight="thin" /><span>Miniatura privada no disponible</span><button type="button" onClick={() => void renewThumbnail(asset)}>Reintentar</button></>}</div>
-        <div className="asset-meta"><strong title={asset.originalName}>{asset.originalName}</strong><span>{formatBytes(asset.byteSize)} · {formatDate(asset.createdAt)}</span><span className="asset-usage-status" data-local={localUsage ? true : undefined}>{localUsage ? "En este tablero" : boardCount ? `${boardCount} ${boardCount === 1 ? "tablero" : "tableros"}` : "Sin usar"}</span></div>
+        <div className="asset-preview">{preview ? <Image src={preview} alt={asset.originalName} fill unoptimized loading={assetIndex === 0 ? "eager" : "lazy"} sizes="(max-width: 640px) 50vw, 260px" onError={() => void renewThumbnail(asset, true)} /> : <><FileImage size={30} weight="thin" /><span>Miniatura privada no disponible</span><button type="button" onClick={() => void renewThumbnail(asset)}>Reintentar</button></>}</div>
+        <div className="asset-meta"><strong title={asset.originalName}>{asset.originalName}</strong><span>{formatAssetBytes(asset.byteSize)} · {formatDate(asset.createdAt)}</span><span className="asset-usage-status" data-local={localUsage ? true : undefined}>{localUsage ? "En este tablero" : boardCount ? `${boardCount} ${boardCount === 1 ? "tablero" : "tableros"}` : "Sin usar"}</span></div>
         {assetUsageList.length ? <details className="asset-usages"><summary>Ver usos ({boardCount})</summary><div>{assetUsageList.map((item) => <button type="button" key={item.itemId} onClick={() => openUsage(item)}><span>{item.boardName}</span><small>{item.itemTitle || "Tarjeta sin título"}</small><ArrowRight size={14} /></button>)}</div></details> : null}
         <footer className="asset-actions">
           {localUsage ? <button className="asset-primary" type="button" onClick={() => openUsage(localUsage)}>Ver en el tablero <ArrowRight size={14} /></button> : runtime.access.role !== "viewer" ? <button className="asset-primary" type="button" disabled={busy || !preview} onClick={() => void addToBoard(asset)}><Plus size={14} /> {busy ? "Añadiendo…" : "Añadir al tablero"}</button> : <span>Sólo lectura</span>}

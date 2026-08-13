@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildExistingAssetCard, groupAssetUsages } from "../../lib/reference-library.ts";
+import { buildExistingAssetCard, formatAssetBytes, groupAssetUsages } from "../../lib/reference-library.ts";
 import type { AssetUsage } from "../../lib/backend/types.ts";
 import type { BoardState } from "../../lib/board-types.ts";
 
@@ -9,6 +9,12 @@ const board: BoardState = {
   sections: [{ id: "section-1", name: "Fotografía", width: 620 }],
   cards: [],
 };
+
+test("muestra cero bytes sin inventar consumo en una biblioteca vacía", () => {
+  assert.equal(formatAssetBytes(0), "0 KB");
+  assert.equal(formatAssetBytes(1024), "1 KB");
+  assert.equal(formatAssetBytes(1024 * 1024), "1.0 MB");
+});
 
 test("agrupa usos por activo sin mezclar tableros", () => {
   const usages: AssetUsage[] = [
