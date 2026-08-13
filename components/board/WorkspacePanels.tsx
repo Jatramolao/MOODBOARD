@@ -3,6 +3,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import {
+  ArrowRight,
   Bell,
   Check,
   CheckCircle,
@@ -10,26 +11,29 @@ import {
   FileImage,
   MagnifyingGlass,
   PaperPlaneTilt,
+  Plus,
   Trash,
   UserMinus,
   X,
 } from "@phosphor-icons/react";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { backend } from "@/lib/backend/client";
 import { mapActivity, mapAsset, mapComment, mapInvitation, mapMember, mapNotification } from "@/lib/backend/mappers";
-import type { ActivityEvent, AssetRecord, BoardComment, ProjectInvitation, ProjectMember, UserNotification } from "@/lib/backend/types";
+import type { ActivityEvent, AssetRecord, AssetUsage, BoardComment, ProjectInvitation, ProjectMember, UserNotification } from "@/lib/backend/types";
 import type { WorkspaceRuntime } from "./BoardWorkspace";
 import type { WorkspaceView } from "./Sidebar";
 import { useBoard } from "./BoardProvider";
 import { createClient } from "@/lib/supabase/client";
 import { frontendErrorMessage, redirectOnUnauthorized } from "@/lib/frontend-errors";
+import { groupAssetUsages } from "@/lib/reference-library";
 
 export type UtilityPanel = "search" | "comments" | "notifications" | null;
 export type CommentAnchor = { id?: string; title: string; x?: number; y?: number };
 
 const formatDate = (value: string) => new Intl.DateTimeFormat("es-CL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+const focusBoardCard = (itemId: string) => Array.from(document.querySelectorAll<HTMLElement>("[data-card-id]")).find((element) => element.dataset.cardId === itemId)?.focus();
 
 function SurfaceState({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "error" }) {
   return <div className="surface-state" data-tone={tone}>{children}</div>;
@@ -43,47 +47,150 @@ export function ContentPanel({ view, runtime, onViewChange }: { view: Exclude<Wo
 }
 
 function AssetsPanel({ runtime, onViewChange }: { runtime: Extract<WorkspaceRuntime, { kind: "supabase" }>; onViewChange: (view: WorkspaceView) => void }) {
-  const { state } = useBoard();
+  const { actions } = useBoard();
   const [assets, setAssets] = useState<AssetRecord[]>([]);
+  const [assetUsages, setAssetUsages] = useState<AssetUsage[]>([]);
+  const [previewByPath, setPreviewByPath] = useState(new Map<string, string>());
   const [usage, setUsage] = useState<Record<string, unknown> | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [message, setMessage] = useState("");
-  const [blockingCards, setBlockingCards] = useState<Array<{ id: string; title: string }>>([]);
-  const load = async () => {
+  const [thumbnailError, setThumbnailError] = useState("");
+  const [busyAssetId, setBusyAssetId] = useState<string | null>(null);
+  const requestId = useRef(0);
+  const thumbnailRetries = useRef(new Set<string>());
+
+  const load = useCallback(async () => {
+    const activeRequest = ++requestId.current;
     try {
-      const [assetRows, usageRow] = await Promise.all([backend.listAssets(runtime.projectId), backend.getProjectUsage(runtime.projectId)]);
-      setAssets((assetRows as Record<string, unknown>[]).map(mapAsset));
+      const assetRowsPromise = backend.listAssets(runtime.projectId);
+      const usagePromise = backend.getProjectUsage(runtime.projectId);
+      const assetRows = await assetRowsPromise;
+      const mappedAssets = (assetRows as Record<string, unknown>[])
+        .map(mapAsset)
+        .filter((asset) => asset.status === "ready");
+      const signedPromise = backend.signAssetPaths(mappedAssets.map((asset) => asset.storagePath))
+        .then((data) => ({ data, cause: null }))
+        .catch((cause: unknown) => ({ data: [], cause }));
+      const [usages, usageRow, signed] = await Promise.all([
+        backend.listAssetUsages(runtime.projectId, mappedAssets.map((asset) => asset.id)),
+        usagePromise,
+        signedPromise,
+      ]);
+      if (activeRequest !== requestId.current) return usages;
+      setAssets(mappedAssets);
+      setAssetUsages(usages);
       setUsage(usageRow as Record<string, unknown> | null);
+      setPreviewByPath(new Map(signed.data.flatMap((item) => item.signedUrl ? [[item.path, item.signedUrl]] : [])));
+      thumbnailRetries.current.clear();
+      setThumbnailError(signed.cause
+        ? frontendErrorMessage(signed.cause, "No pudimos firmar las miniaturas privadas. Reintenta la carga.")
+        : signed.data.some((item) => !item.signedUrl)
+          ? "Algunas miniaturas privadas no están disponibles. Puedes reintentarlas individualmente."
+          : "");
       setStatus("ready");
-    } catch (cause) { if (!redirectOnUnauthorized(cause)) setMessage(frontendErrorMessage(cause, "No pudimos cargar los activos.")); setStatus("error"); }
-  };
+      return usages;
+    } catch (cause) {
+      if (activeRequest !== requestId.current) return [];
+      if (!redirectOnUnauthorized(cause)) setMessage(frontendErrorMessage(cause, "No pudimos cargar los activos."));
+      setStatus("error");
+      return [];
+    }
+  }, [runtime.projectId]);
+
   useEffect(() => {
     void load();
     const refresh = () => void load();
     window.addEventListener("moodboard:assets-changed", refresh);
     return () => window.removeEventListener("moodboard:assets-changed", refresh);
-  }, [runtime.projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [load]);
+
+  const renewThumbnail = useCallback(async (asset: AssetRecord, automatic = false) => {
+    if (automatic && thumbnailRetries.current.has(asset.storagePath)) {
+      setPreviewByPath((current) => {
+        const next = new Map(current); next.delete(asset.storagePath); return next;
+      });
+      return;
+    }
+    if (automatic) thumbnailRetries.current.add(asset.storagePath);
+    try {
+      const [signed] = await backend.signAssetPaths([asset.storagePath]);
+      if (!signed?.signedUrl) throw new Error("La ruta privada no pudo firmarse.");
+      setPreviewByPath((current) => new Map(current).set(asset.storagePath, signed.signedUrl!));
+    } catch (cause) {
+      setPreviewByPath((current) => { const next = new Map(current); next.delete(asset.storagePath); return next; });
+      setThumbnailError(frontendErrorMessage(cause, `No pudimos renovar la miniatura de ${asset.originalName}.`));
+    }
+  }, []);
+
+  const openUsage = useCallback((assetUsage: AssetUsage) => {
+    if (assetUsage.boardId !== runtime.boardId) {
+      window.location.assign(`/?board=${encodeURIComponent(assetUsage.boardId)}&focus=${encodeURIComponent(assetUsage.itemId)}`);
+      return;
+    }
+    onViewChange("board");
+    window.setTimeout(() => focusBoardCard(assetUsage.itemId), 60);
+  }, [onViewChange, runtime.boardId]);
+
+  const usagesByAsset = useMemo(() => groupAssetUsages(assetUsages), [assetUsages]);
+
+  const addToBoard = async (asset: AssetRecord) => {
+    const imageUrl = previewByPath.get(asset.storagePath);
+    if (!imageUrl) { await renewThumbnail(asset); return; }
+    setBusyAssetId(asset.id); setMessage("");
+    try {
+      const result = await actions.addExistingImage({
+        assetId: asset.id,
+        imagePath: asset.storagePath,
+        imageUrl,
+        title: asset.originalName.replace(/\.[^.]+$/, ""),
+      });
+      await load();
+      setMessage(result.status === "existing" ? "La referencia ya estaba en este tablero." : `“${asset.originalName}” se añadió al tablero.`);
+      openUsage({ assetId: asset.id, boardId: runtime.boardId, boardName: runtime.boardName, itemId: result.cardId, itemTitle: asset.originalName, itemCreatedAt: new Date().toISOString() });
+    } catch (cause) {
+      const refreshed = await load();
+      const existing = refreshed.find((item) => item.assetId === asset.id && item.boardId === runtime.boardId);
+      if (existing) openUsage(existing);
+      if (!redirectOnUnauthorized(cause)) setMessage(frontendErrorMessage(cause, "No pudimos añadir la referencia al tablero."));
+    } finally { setBusyAssetId(null); }
+  };
+
+  const deleteAsset = async (asset: AssetRecord) => {
+    if (!window.confirm(`¿Eliminar definitivamente “${asset.originalName}” de Referencias? Esta acción solo es posible si ningún tablero la está usando.`)) return;
+    setBusyAssetId(asset.id); setMessage("");
+    try {
+      await backend.markAssetDeleted(asset.id);
+      await load();
+      setMessage(`“${asset.originalName}” se eliminó de Referencias.`);
+    } catch (cause) {
+      await load();
+      if (!redirectOnUnauthorized(cause)) setMessage(frontendErrorMessage(cause, "No pudimos eliminar el activo."));
+    } finally { setBusyAssetId(null); }
+  };
+
   if (status === "loading") return <PanelSkeleton title="Referencias" />;
-  if (status === "error") return <SurfaceState tone="error">{message}</SurfaceState>;
+  if (status === "error") return <main className="content-panel"><SurfaceState tone="error"><span>{message}</span><button className="text-action" type="button" onClick={() => { setStatus("loading"); void load(); }}>Reintentar</button></SurfaceState></main>;
   const bytes = Number(usage?.asset_bytes ?? usage?.assetBytes ?? assets.reduce((sum, asset) => sum + asset.byteSize, 0));
-  const imageByAsset = new Map(state.cards.flatMap((card) => card.assetId && card.imageUrl ? [[card.assetId, { url: card.imageUrl, title: card.title || card.imageUrl }]] : []));
   return <main className="content-panel" id="board-main">
     <header className="content-panel-header"><div><span>Biblioteca del proyecto</span><h1>Referencias</h1><p>Archivos privados disponibles para todos los tableros del proyecto.</p></div><div className="usage-stat"><strong>{assets.length}</strong><span>activos · {formatBytes(bytes)}</span></div></header>
-    {assets.length ? <div className="asset-grid">{assets.map((asset) => <article className="asset-tile" key={asset.id}>
-      <div className="asset-preview">{imageByAsset.has(asset.id) ? <Image src={imageByAsset.get(asset.id)!.url} alt={imageByAsset.get(asset.id)!.title} fill unoptimized sizes="260px" /> : <><FileImage size={30} weight="thin" /><span>{asset.mimeType.replace("image/", "").toUpperCase()}</span></>}</div>
-      <div><strong title={asset.originalName}>{asset.originalName}</strong><span>{formatBytes(asset.byteSize)} · {formatDate(asset.createdAt)}</span></div>
-      {runtime.access.role !== "viewer" ? <button type="button" aria-label={`Eliminar ${asset.originalName}`} onClick={async () => {
-        if (!window.confirm(`¿Eliminar definitivamente “${asset.originalName}” de Referencias? Esta acción solo es posible si ningún tablero la está usando.`)) return;
-        setMessage(""); setBlockingCards([]);
-        try { await backend.markAssetDeleted(asset.id); await load(); setMessage(`“${asset.originalName}” se eliminó de Referencias.`); }
-        catch (cause) {
-          const cards = state.cards.filter((card) => card.assetId === asset.id).map((card) => ({ id: card.id, title: card.title || "Elemento sin título" }));
-          setBlockingCards(cards);
-          if (!redirectOnUnauthorized(cause)) setMessage(`${frontendErrorMessage(cause, "No pudimos eliminar el activo.")}${cards.length ? "" : " Puede estar en uso en otro tablero del proyecto."}`);
-        }
-      }}><Trash size={16} /></button> : null}
-    </article>)}</div> : <SurfaceState>No hay activos todavía. Agrega imágenes desde la barra del tablero.</SurfaceState>}
-    {message ? <div className="inline-feedback" role="alert"><p>{message}</p>{blockingCards.length ? <><span>Lo usan: {blockingCards.map((card) => card.title).join(", ")}.</span><button type="button" onClick={() => { onViewChange("board"); window.setTimeout(() => document.querySelector<HTMLElement>(`[data-card-id="${blockingCards[0].id}"]`)?.focus(), 50); }}>Ver en el tablero</button></> : null}</div> : null}
+    {thumbnailError ? <div className="inline-feedback asset-library-feedback" role="alert"><span>{thumbnailError}</span><button type="button" onClick={() => void load()}>Recargar miniaturas</button></div> : null}
+    {message ? <div className="inline-feedback asset-library-feedback" role="status">{message}</div> : null}
+    {assets.length ? <div className="asset-grid">{assets.map((asset) => {
+      const assetUsageList = usagesByAsset.get(asset.id) ?? [];
+      const localUsage = assetUsageList.find((item) => item.boardId === runtime.boardId);
+      const preview = previewByPath.get(asset.storagePath);
+      const boardCount = new Set(assetUsageList.map((item) => item.boardId)).size;
+      const busy = busyAssetId === asset.id;
+      return <article className="asset-tile" key={asset.id} aria-busy={busy || undefined}>
+        <div className="asset-preview">{preview ? <Image src={preview} alt={asset.originalName} fill unoptimized sizes="(max-width: 640px) 50vw, 260px" onError={() => void renewThumbnail(asset, true)} /> : <><FileImage size={30} weight="thin" /><span>Miniatura privada no disponible</span><button type="button" onClick={() => void renewThumbnail(asset)}>Reintentar</button></>}</div>
+        <div className="asset-meta"><strong title={asset.originalName}>{asset.originalName}</strong><span>{formatBytes(asset.byteSize)} · {formatDate(asset.createdAt)}</span><span className="asset-usage-status" data-local={localUsage ? true : undefined}>{localUsage ? "En este tablero" : boardCount ? `${boardCount} ${boardCount === 1 ? "tablero" : "tableros"}` : "Sin usar"}</span></div>
+        {assetUsageList.length ? <details className="asset-usages"><summary>Ver usos ({boardCount})</summary><div>{assetUsageList.map((item) => <button type="button" key={item.itemId} onClick={() => openUsage(item)}><span>{item.boardName}</span><small>{item.itemTitle || "Tarjeta sin título"}</small><ArrowRight size={14} /></button>)}</div></details> : null}
+        <footer className="asset-actions">
+          {localUsage ? <button className="asset-primary" type="button" onClick={() => openUsage(localUsage)}>Ver en el tablero <ArrowRight size={14} /></button> : runtime.access.role !== "viewer" ? <button className="asset-primary" type="button" disabled={busy || !preview} onClick={() => void addToBoard(asset)}><Plus size={14} /> {busy ? "Añadiendo…" : "Añadir al tablero"}</button> : <span>Sólo lectura</span>}
+          {runtime.access.role !== "viewer" ? <button className="asset-delete" type="button" disabled={busy} aria-label={`Eliminar definitivamente ${asset.originalName}`} title="Eliminar de Referencias" onClick={() => void deleteAsset(asset)}><Trash size={16} /></button> : null}
+        </footer>
+      </article>;
+    })}</div> : <SurfaceState>No hay activos todavía. Agrega imágenes desde la barra del tablero.</SurfaceState>}
   </main>;
 }
 

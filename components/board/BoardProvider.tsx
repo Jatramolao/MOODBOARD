@@ -24,11 +24,13 @@ import {
 import type {
   BoardActions,
   BoardCard,
+  ExistingBoardAsset,
   BoardMeta,
   BoardState,
 } from "@/lib/board-types";
 import { frontendErrorMessage, readBackendError } from "@/lib/frontend-errors";
 import { executeImageRemoval } from "@/lib/image-removal";
+import { buildExistingAssetCard } from "@/lib/reference-library";
 
 const STORAGE_KEY = "moodboard.workspace.v1";
 const MIN_SECTION_WIDTH = 420;
@@ -394,6 +396,45 @@ export function BoardProvider({
     });
   }, [adapter, readOnly, versionConflict]);
 
+  const addExistingImage = useCallback(async (asset: ExistingBoardAsset) => {
+    if (readOnly || versionConflict) {
+      throw new Error("Tu rol no permite añadir esta referencia.");
+    }
+    const existing = state.cards.find((card) => card.assetId === asset.assetId);
+    if (existing) return { cardId: existing.id, status: "existing" as const };
+
+    const card = buildExistingAssetCard(state, asset, crypto.randomUUID());
+    const next = { ...state, cards: [...state.cards, card] };
+    setSyncStatus("saving");
+    setSyncError(undefined);
+    try {
+      if (adapter) {
+        lastLocalSave.current = Date.now();
+        await adapter.save(next);
+        suppressNextSave.current = true;
+      } else {
+        window.localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ version: 1, board: next }),
+        );
+      }
+      setState(next);
+      setSyncStatus(adapter ? "saved" : "local");
+      window.dispatchEvent(new CustomEvent("moodboard:assets-changed"));
+      return { cardId: card.id, status: "created" as const };
+    } catch (cause) {
+      const mapped = readBackendError(cause);
+      const message = frontendErrorMessage(
+        cause,
+        "No pudimos añadir la referencia al tablero.",
+      );
+      setSyncStatus("error");
+      setSyncError(message);
+      if (mapped.code === "VERSION_CONFLICT") setVersionConflict(true);
+      throw cause;
+    }
+  }, [adapter, readOnly, state, versionConflict]);
+
   const moveCard = useCallback(
     (cardId: string, globalX: number, y: number) => {
       if (readOnly || versionConflict) return;
@@ -593,6 +634,7 @@ export function BoardProvider({
       addSection,
       addNote,
       addImages,
+      addExistingImage,
       moveCard,
       resizeCard,
       removeCard,
@@ -603,6 +645,7 @@ export function BoardProvider({
     }),
     [
       addImages,
+      addExistingImage,
       addNote,
       addSection,
       moveCard,

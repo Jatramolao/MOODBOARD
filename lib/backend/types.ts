@@ -125,6 +125,12 @@ export type AssetUsage = {
   itemCreatedAt: string;
 };
 
+export type SignedAssetUrl = {
+  path: string;
+  signedUrl: string | null;
+  error: string | null;
+};
+
 export type ActivityEvent = {
   id: number;
   projectId: string;

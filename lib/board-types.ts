@@ -35,10 +35,25 @@ export type ImageRemovalResult = {
   message: string;
 };
 
+export type ExistingBoardAsset = {
+  assetId: string;
+  imagePath: string;
+  imageUrl: string;
+  title: string;
+};
+
+export type AddExistingImageResult = {
+  cardId: string;
+  status: "created" | "existing";
+};
+
 export type BoardActions = {
   addSection: (name: string) => void;
   addNote: () => void;
   addImages: (files: FileList | File[]) => Promise<void>;
+  addExistingImage: (
+    asset: ExistingBoardAsset,
+  ) => Promise<AddExistingImageResult>;
   moveCard: (
     cardId: string,
     globalX: number,

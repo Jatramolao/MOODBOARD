@@ -72,6 +72,23 @@ test("explica cuotas y permisos con acciones comprensibles", () => {
   );
 });
 
+test("explica los conflictos de reutilización y los usos en otros tableros", () => {
+  assert.match(
+    frontendErrorMessage(
+      { code: "ASSET_IN_USE", message: "ASSET_IN_USE", retryable: false },
+      "Error",
+    ),
+    /uno o más tableros/,
+  );
+  assert.match(
+    frontendErrorMessage(
+      { code: "ASSET_ALREADY_ON_BOARD", message: "ASSET_ALREADY_ON_BOARD:item-1", retryable: false },
+      "Error",
+    ),
+    /ya existe/,
+  );
+});
+
 test("la sesión expirada usa un mensaje global que no presupone mutaciones", () => {
   const message = frontendErrorMessage(
     { code: "UNAUTHORIZED", message: "UNAUTHORIZED", retryable: false },

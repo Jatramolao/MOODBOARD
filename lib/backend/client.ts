@@ -7,9 +7,13 @@ import { validateOperations } from "./validation";
 import type {
   ApplyOperationsInput,
   ApplyOperationsResult,
+  SignedAssetUrl,
   SharePermission,
   SharedBoardPayload,
 } from "./types";
+
+const ASSET_BUCKET = "board-assets";
+const SIGNED_ASSET_TTL_SECONDS = 60 * 60 * 8;
 
 function requireClient() {
   const client = createClient();
@@ -313,6 +317,20 @@ export const backend = {
         .order("created_at", { ascending: false })
         .limit(Math.max(1, Math.min(limit, 500))),
     );
+  },
+
+  async signAssetPaths(storagePaths: string[]): Promise<SignedAssetUrl[]> {
+    const paths = [...new Set(storagePaths)].filter(Boolean);
+    if (!paths.length) return [];
+    const { data, error } = await requireClient().storage
+      .from(ASSET_BUCKET)
+      .createSignedUrls(paths, SIGNED_ASSET_TTL_SECONDS);
+    if (error) throw mapBackendError(error);
+    return (data ?? []).map((entry: { path: string; signedUrl: string | null; error?: string | null }) => ({
+      path: entry.path,
+      signedUrl: entry.signedUrl,
+      error: entry.error ?? null,
+    }));
   },
 
   async markAssetDeleted(assetId: string) {
