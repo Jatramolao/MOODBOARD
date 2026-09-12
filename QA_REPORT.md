@@ -5,7 +5,30 @@ meta:
 
 # Comprobar la calidad vigente
 
-Este informe registra el cierre del ciclo 002 y la validación activa del ciclo 003. Última actualización: 13 de agosto de 2026.
+Este informe registra el cierre del ciclo 002 y la validación activa del ciclo 003. Última actualización: 12 de septiembre de 2026.
+
+## Prepublicación del 12 de septiembre
+
+- Suite backend/frontend: 40/40 aprobada.
+- Suite HTTP: 3/3 aprobada en `localhost:3000`.
+- TypeScript, ESLint y build de producción: aprobados con Next.js 16.3.5.
+- Dependencias de producción: 0 vulnerabilidades conocidas después de actualizar Next.js a 16.3.5 y Sharp a 0.35.4.
+- `git diff --check`: aprobado.
+- Los hallazgos de interacción descritos abajo continúan abiertos; este control habilita un preview de validación, no el cierre de UX ni el despliegue a producción.
+
+## Auditoría de interacción del 10 de septiembre
+
+Informe reproducible y capturas: [Testing de interacción](docs/qa/2026-09-10/REPORT.md).
+
+- Regresiones actuales: 40/40; TypeScript, ESLint y build aprobados.
+- HTTP: 3/3 en `localhost:3000`; variante `127.0.0.1` arroja 2/3 por diferencia del origen del callback.
+- Navegador integrado: acceso público, demo local, notas, búsqueda, cancelación de retirada y tamaños 390/768/1280/1440 px.
+- P1: pérdida del borrador de notas al recargar sin salir del campo; estado de guardado oculto por debajo de 900 px.
+- P2: navegación sin nombres accesibles en tablet, ajuste fijo a 82%, navegación móvil incompleta y búsqueda con tarjeta parcialmente fuera de vista.
+- P3: objetivos táctiles pequeños y creación de nota sin transferir foco.
+- No se corrigió código de producto. Los hallazgos remotos requieren confirmación autenticada; M003-E sigue pendiente.
+
+La evidencia histórica siguiente conserva su fecha y no sustituye esta ejecución.
 
 ## Integración local del ciclo 003
 

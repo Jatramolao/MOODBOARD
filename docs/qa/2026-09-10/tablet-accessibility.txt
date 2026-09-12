@@ -1,0 +1,149 @@
+- link "Saltar al tablero":
+  - /url: "#board-main"
+- complementary "Navegación del proyecto":
+  - generic "Moodboard": M MOODBOARD
+  - button "Proyecto Campaña Otoño 2026":
+    - generic: Proyecto
+    - text: Campaña Otoño 2026
+  - navigation "Secciones del proyecto":
+    - button [active]:
+    - button:
+    - button:
+    - button:
+  - region "Tableros del proyecto":
+    - button "▦ Tablero general"
+  - button "MS":
+    - generic: MS
+- banner:
+  - generic "Ruta actual":
+    - strong: Campaña Otoño 2026
+    - generic: Tablero general
+  - button "Buscar en el tablero":
+  - button "Abrir comentarios":
+  - button "Abrir notificaciones":
+  - button "Compartir":
+    - text: Compartir
+- main:
+  - heading "Moodboard de Campaña Otoño 2026" [level=1]
+  - generic "Herramientas del tablero":
+    - button "Imagen":
+      - text: Imagen
+    - button "Nota":
+      - text: Nota
+    - button "Alejar":
+    - status "Zoom 82%": 82%
+    - button "Acercar":
+    - button "Ajustar tablero":
+    - button "Choose File"
+  - generic "Lienzo desplazable del moodboard":
+    - region "TABLERO PRINCIPAL":
+      - generic: "01"
+      - heading "TABLERO PRINCIPAL" [level=2]
+    - region "FOTOGRAFÍA":
+      - generic: "02"
+      - heading "FOTOGRAFÍA" [level=2]
+    - region "MAKEUP":
+      - generic: "03"
+      - heading "MAKEUP" [level=2]
+    - article "Silueta y estructura; arrastrable":
+      - button "Comentar Silueta y estructura":
+      - button "Elegir cómo retirar Silueta y estructura":
+      - img "Silueta y estructura"
+      - generic: Silueta y estructura
+      - button "Redimensionar Silueta y estructura"
+    - article "Movimiento; arrastrable":
+      - button "Comentar Movimiento":
+      - button "Elegir cómo retirar Movimiento":
+      - img "Movimiento"
+      - generic: Movimiento
+      - button "Redimensionar Movimiento"
+    - article "Dirección de casting; arrastrable":
+      - button "Comentar Dirección de casting":
+      - button "Elegir cómo retirar Dirección de casting":
+      - img "Dirección de casting"
+      - generic: Dirección de casting
+      - button "Redimensionar Dirección de casting"
+    - article "Paleta de locación; arrastrable":
+      - button "Comentar Paleta de locación":
+      - button "Elegir cómo retirar Paleta de locación":
+      - img "Paleta de locación"
+      - generic: Paleta de locación
+      - button "Redimensionar Paleta de locación"
+    - article "Gesto; arrastrable":
+      - button "Comentar Gesto":
+      - button "Elegir cómo retirar Gesto":
+      - img "Gesto"
+      - generic: Gesto
+      - button "Redimensionar Gesto"
+    - article "Materialidad; arrastrable":
+      - button "Comentar Materialidad":
+      - button "Elegir cómo retirar Materialidad":
+      - img "Materialidad"
+      - generic: Materialidad
+      - button "Redimensionar Materialidad"
+    - article "Paleta; arrastrable":
+      - button "Comentar Paleta":
+      - button "Eliminar Paleta":
+      - strong: Paleta
+      - generic "Muestras de color"
+      - button "Redimensionar Paleta"
+    - article "Nota de dirección; arrastrable":
+      - button "Comentar Nota de dirección":
+      - button "Eliminar Nota de dirección":
+      - textbox "Título de la nota": Nota de dirección
+      - textbox "Contenido de la nota": Explorar la tensión entre estructura y fluidez. Luz dura que esculpe y texturas naturales que aporten calidez.
+      - generic: — M.S.
+      - button "Redimensionar Nota de dirección"
+    - article "Óptica; arrastrable":
+      - button "Comentar Óptica":
+      - button "Elegir cómo retirar Óptica":
+      - img "Óptica"
+      - generic: Óptica
+      - button "Redimensionar Óptica"
+    - article "Esquema de luz; arrastrable":
+      - button "Comentar Esquema de luz":
+      - button "Elegir cómo retirar Esquema de luz":
+      - img "Esquema de luz"
+      - generic: Esquema de luz
+      - button "Redimensionar Esquema de luz"
+    - article "Estudio; arrastrable":
+      - button "Comentar Estudio":
+      - button "Elegir cómo retirar Estudio":
+      - img "Estudio"
+      - generic: Estudio
+      - button "Redimensionar Estudio"
+    - article "Contraste; arrastrable":
+      - button "Comentar Contraste":
+      - button "Elegir cómo retirar Contraste":
+      - img "Contraste"
+      - generic: Contraste
+      - button "Redimensionar Contraste"
+    - article "Piel; arrastrable":
+      - button "Comentar Piel":
+      - button "Elegir cómo retirar Piel":
+      - img "Piel"
+      - generic: Piel
+      - button "Redimensionar Piel"
+    - article "Labios; arrastrable":
+      - button "Comentar Labios":
+      - button "Elegir cómo retirar Labios":
+      - img "Labios"
+      - generic: Labios
+      - button "Redimensionar Labios"
+    - article "Tonos de piel; arrastrable":
+      - button "Comentar Tonos de piel":
+      - button "Eliminar Tonos de piel":
+      - strong: Tonos de piel
+      - generic "Muestras de color"
+      - button "Redimensionar Tonos de piel"
+    - article "QA interacción 2026-09-10; arrastrable":
+      - button "Comentar QA interacción 2026-09-10":
+      - button "Eliminar QA interacción 2026-09-10":
+      - textbox "Título de la nota": QA interacción 2026-09-10
+      - textbox "Contenido de la nota": Escribe aquí una observación para el equipo.
+      - generic: — M.S.
+      - button "Redimensionar QA interacción 2026-09-10"
+    - button "Extender tablero":
+      - text: Extender tablero
+- button "Open Next.js Dev Tools":
+- alert
