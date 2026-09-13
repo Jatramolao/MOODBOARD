@@ -16,6 +16,7 @@ import {
   cloneBoard,
 } from "@/lib/backend/board-operations";
 import { mapBackendError } from "@/lib/backend/errors";
+import { createRetryableOperation } from "@/lib/backend/retryable-operation";
 import { createClient } from "./client";
 import { getSupabaseEnv } from "./env";
 
@@ -136,6 +137,22 @@ export function createSupabaseBoardAdapter({
   let boardVersion = 1;
   let lastSavedBoard: BoardState | null = null;
   let saveQueue: Promise<void> = Promise.resolve();
+  const operation = createRetryableOperation(async (batch: {
+    snapshot: BoardState;
+    args: { p_board_id: string; p_base_version: number; p_operation_id: string; p_operations: ReturnType<typeof buildBoardOperations> };
+  }) => {
+    const { data, error } = await (async () => {
+      try { return await client.rpc("apply_board_operations", batch.args); }
+      catch (error) { throw mapBackendError(error); }
+    })();
+    if (error) throw mapBackendError(error);
+    const result = Array.isArray(data) ? data[0] : data;
+    boardVersion = Number(result?.board_version ?? batch.args.p_base_version + 1);
+    lastSavedBoard = cloneBoard(batch.snapshot);
+  }, (error) => {
+    const mapped = error as { retryable?: boolean; code?: string };
+    return Boolean(mapped.retryable) && mapped.code !== "VERSION_CONFLICT";
+  });
 
   const discardUploadedAssets: BoardAdapter["discardUploadedAssets"] = async (
     assets,
@@ -178,7 +195,7 @@ export function createSupabaseBoardAdapter({
   return {
     kind: "supabase",
 
-    async load() {
+    async load(accept) {
       const [boardResult, sectionsResult, itemsResult] = await Promise.all([
         client.from("boards").select("zoom,version").eq("id", boardId).single(),
         client
@@ -245,6 +262,7 @@ export function createSupabaseBoardAdapter({
         cards,
         zoom: Number(boardResult.data.zoom ?? 0.82),
       };
+      if (accept && !accept()) return null;
       boardVersion = Number(boardResult.data.version ?? 1);
       lastSavedBoard = cloneBoard(loadedBoard);
       return loadedBoard;
@@ -257,19 +275,18 @@ export function createSupabaseBoardAdapter({
           lastSavedBoard = cloneBoard(requestedBoard);
           return;
         }
-        const operations = buildBoardOperations(lastSavedBoard, requestedBoard);
-        if (!operations.length) return;
-
-        const { data, error } = await client.rpc("apply_board_operations", {
-          p_board_id: boardId,
-          p_base_version: boardVersion,
-          p_operation_id: crypto.randomUUID(),
-          p_operations: operations,
-        });
-        if (error) throw mapBackendError(error);
-        const result = Array.isArray(data) ? data[0] : data;
-        boardVersion = Number(result?.board_version ?? boardVersion + 1);
-        lastSavedBoard = cloneBoard(requestedBoard);
+        // A lost response can mean the server committed the batch. Replay it
+        // before building a delta for edits made while that response was lost.
+        while (true) {
+          const operations = buildBoardOperations(lastSavedBoard!, requestedBoard);
+          if (!operations.length && !operation.hasPending()) return;
+          await operation.run({ snapshot: requestedBoard, args: {
+            p_board_id: boardId,
+            p_base_version: boardVersion,
+            p_operation_id: crypto.randomUUID(),
+            p_operations: operations,
+          } });
+        }
       });
       return saveQueue;
     },

@@ -43,8 +43,6 @@ export function BoardCard({
   const dragRef = useRef<DragSession | null>(null);
   const resizeRef = useRef<ResizeSession | null>(null);
   const [active, setActive] = useState(false);
-  const [draftTitle, setDraftTitle] = useState(card.title ?? "");
-  const [draftContent, setDraftContent] = useState(card.content ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const onDragStart = (event: React.PointerEvent<HTMLElement>) => {
@@ -178,6 +176,7 @@ export function BoardCard({
       onPointerUp={onDragEnd}
       onPointerCancel={onDragEnd}
       onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
         const distance = event.shiftKey ? 40 : 12;
         if (event.key === "ArrowLeft") {
           event.preventDefault();
@@ -246,8 +245,8 @@ export function BoardCard({
       {card.type === "note" ? (
         <div className="note-content">
           {meta.canEdit ? <>
-            <input aria-label="Título de la nota" value={draftTitle} onPointerDown={(event) => event.stopPropagation()} onChange={(event) => setDraftTitle(event.target.value)} onBlur={() => actions.updateCardText(card.id, draftTitle, draftContent)} />
-            <textarea aria-label="Contenido de la nota" value={draftContent} onPointerDown={(event) => event.stopPropagation()} onChange={(event) => setDraftContent(event.target.value)} onBlur={() => actions.updateCardText(card.id, draftTitle, draftContent)} />
+            <input aria-label="Título de la nota" value={card.title ?? ""} onPointerDown={(event) => event.stopPropagation()} onChange={(event) => actions.updateCardText(card.id, event.target.value, card.content ?? "")} />
+            <textarea aria-label="Contenido de la nota" value={card.content ?? ""} onPointerDown={(event) => event.stopPropagation()} onChange={(event) => actions.updateCardText(card.id, card.title ?? "", event.target.value)} />
           </> : <><strong>{card.title}</strong><p>{card.content}</p></>}
           <small>— M.S.</small>
         </div>

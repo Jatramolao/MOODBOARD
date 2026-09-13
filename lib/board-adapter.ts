@@ -26,7 +26,7 @@ export function removeCardsForAssets(
 
 export interface BoardAdapter {
   readonly kind: "supabase";
-  load(): Promise<BoardState | null>;
+  load(accept?: () => boolean): Promise<BoardState | null>;
   save(board: BoardState): Promise<void>;
   uploadImages(files: File[]): Promise<UploadedBoardAsset[]>;
   deleteAsset(assetId: string): Promise<void>;
