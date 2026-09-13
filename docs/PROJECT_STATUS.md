@@ -74,8 +74,8 @@ estado visible de sincronización y reintento seguro tras pérdida de conexión 
 Offline real y concurrencia owner/editor comprobados en navegador; viewer sin escrituras
 de zoom. Evidencia: [informe de correcciones](qa/2026-09-13-corrections/REPORT.md).
 Puertas de esta fase: 45/45 unitarias y 7/7 HTTP autenticadas/anónimas; build y diff aprobados.
-Responsable actual: integración/QA. Push de la rama autorizado el 13 de septiembre;
-publicación Git en curso. Merge a `main` y despliegue productivo requieren autorización
+Responsable actual: integración/QA. Push autorizado y completado el 13 de septiembre;
+ajustes publicados en la rama mediante `02c42ad`. Merge a `main` y despliegue productivo requieren autorización
 independiente. No se agregaron funcionalidades.
 
 Los pendientes anteriores se conservan como historial y no equivalen a publicar esta fase.

@@ -4,7 +4,8 @@
 
 Trabajo local autorizado por producto: corregir funciones existentes, sin agregar
 funcionalidades. Rama `codex/003-reference-library-reuse`, base `df04e51`.
-Push de la rama autorizado el 13 de septiembre; publicación de Git en curso.
+Push de la rama autorizado y completado el 13 de septiembre. Ajustes publicados
+en GitHub mediante `02c42ad` (`codex/003-reference-library-reuse`).
 No se autorizó merge, despliegue productivo ni migración productiva en esta fase.
 Se preservaron los cambios documentales previos de la sesión QA del 12 de septiembre.
 
