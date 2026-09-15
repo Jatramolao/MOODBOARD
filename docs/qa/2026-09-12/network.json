@@ -1,0 +1,30 @@
+{
+  "method": "Injected failure in Supabase SDK fetch; not browser offline emulation",
+  "boardId": "89179b6a-f330-415c-8365-2627272949c3",
+  "checks": [
+    {
+      "name": "signing reports transport failure",
+      "pass": true
+    },
+    {
+      "name": "signing recovers",
+      "pass": true
+    },
+    {
+      "name": "reinsertion reports transport failure",
+      "pass": true
+    },
+    {
+      "name": "failed transport leaves version unchanged",
+      "pass": true
+    },
+    {
+      "name": "recovered reinsertion is idempotent",
+      "pass": true
+    },
+    {
+      "name": "recovered reinsertion has one card",
+      "pass": true
+    }
+  ]
+}

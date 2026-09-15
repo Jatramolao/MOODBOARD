@@ -5,23 +5,27 @@ meta:
 
 # Entender el estado actual del proyecto
 
-Este documento resume la fase activa, la base publicada y las acciones necesarias para cerrar el ciclo. Última actualización: 12 de septiembre de 2026.
+Este documento resume la fase activa, la base publicada y las acciones necesarias para cerrar el ciclo. Última actualización: 14 de septiembre de 2026.
 
 ## Estado ejecutivo
 
-- **Fase**: prepublicación de la rama de integración; cierre manual M003-E pendiente
+- **Fase**: publicación autorizada; merge a `main` en curso
 - **Rama local**: `codex/003-reference-library-reuse`
 - **GitHub**: `main` y `origin/main` en `5b741b1`
 - **Producción**: deployment `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ`, estado `Ready`
 - **Ciclo 002**: aprobado manualmente y cerrado por producto
-- **Spec 003**: `validation`
-- **Plan 003**: `in_progress`
-- **Hallazgos abiertos de interacción**: dos P1 y cuatro P2 documentados en la auditoría del 10 de septiembre; requieren priorización y corrección antes del cierre de UX
-- **Bloqueo de entorno**: faltan perfiles manuales separados de editor/viewer y prueba de red
-- **Responsable actual**: integración entrega auditoría de interacción; frontend recibe hallazgos y M003-E continúa pendiente
+- **Spec 003**: `validation`; pasa a `released` tras el smoke productivo
+- **Plan 003**: implementación y validación completas; publicación en curso
+- **Hallazgos de interacción**: los P1 de guardado y estado visible fueron corregidos y validados; los P2 restantes permanecen registrados para otra iteración
+- **Cuentas QA**: owner/editor/viewer creadas con autorización; permisos comprobados por RPC y sesiones secuenciales de navegador
+- **M003-E**: aprobado con offline visual, reconexión y edición simultánea en perfiles separados
+- **Responsable actual**: integración/publicación; merge y despliegue autorizados el 14 de septiembre
 - **Frontend**: paquetes 2 a 4 implementados localmente en `2b131b3`
-- **Puertas automáticas vigentes**: 40/40 unitarias, 3/3 HTTP, build aprobado y 0 vulnerabilidades de producción conocidas
+- **Puertas automáticas vigentes**: 45/45 unitarias, 7/7 HTTP autenticadas/anónimas, build aprobado y 0 vulnerabilidades de producción conocidas
 - **Dependencias de seguridad**: Next.js 16.3.5 y Sharp 0.35.4 fijados en el lockfile
+- **Testing remoto actual**: 17/17 comprobaciones por rol y 6/6 de transporte; pérdida de borrador confirmada con Supabase real
+- **Datos QA conservados**: proyectos `QA-20260912 af4fe910` y `QA-20260912 recorrido UI`, cinco tableros en total, una imagen sintética y tres cuentas; IDs y evidencia en el informe del 12 de septiembre
+- **Plan de usuario ampliado**: crear proyecto/tablero, cambiar proyectos y mover/redimensionar imágenes comprobados desde UI con persistencia. Solicitud de correo confirmada; apertura del enlace pendiente
 
 ## Cierre del ciclo 002
 

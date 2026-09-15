@@ -5,6 +5,32 @@ meta:
 
 # Comprobar la calidad vigente
 
+## Correcciones verificadas del 13 de septiembre de 2026
+
+**Guardado, reconexión y enlaces compartidos aprobados para publicación.**
+[Informe completo](docs/qa/2026-09-13-corrections/REPORT.md).
+
+- Notas guardadas mientras se escribe, sin depender de blur.
+- Offline real conserva el borrador y lo confirma al reconectar.
+- Reintento idempotente ante confirmación perdida; conflictos no sobrescriben borradores.
+- Enlaces anónimos con imágenes privadas aprobados; tableros archivados no crean enlaces engañosos.
+- Owner/editor/viewer, concurrencia y zoom de sólo lectura comprobados.
+- 45/45 unitarias, 7/7 HTTP autenticadas/anónimas, build y `git diff --check` aprobados.
+
+## Testing autenticado del 12 de septiembre de 2026
+
+**Resultado mixto: automatización aprobada; publicación no aprobada por este ciclo.** [Informe y evidencia](docs/qa/2026-09-12/REPORT.md).
+
+- 40/40 unitarias, TypeScript, ESLint, build y 3/3 HTTP aprobados; auditoría de producción: 0 vulnerabilidades informadas.
+- Tres cuentas QA creadas con autorización. 17/17 comprobaciones remotas de roles, operaciones versionadas, activos y permisos.
+- 6/6 pruebas de fallo/recuperación de transporte en SDK. No sustituyen offline visual del navegador.
+- Owner/editor/viewer comprobados en sesiones secuenciales; viewer sin edición ni comentarios, editor retira/reinserta sin duplicados.
+- UX-01 confirmado en Supabase real: `Guardado` visible mientras un borrador sin blur se pierde al recargar.
+- UX-02/03/04/05 siguen presentes en móvil/tablet. M003-E mantiene pendientes offline visual y concurrencia entre perfiles.
+- Se conservan cuentas y proyecto QA aislado; detalle en el informe. Ningún cambio de producto ni despliegue.
+- Ampliación al plan del usuario: proyecto y tablero creados desde UI, cambio entre proyectos en ambos sentidos, arrastre y redimensionado de imagen con persistencia exacta aprobados. Se conservan dos proyectos QA y cinco tableros.
+- Correo de acceso solicitado con confirmación de envío en la interfaz; pendiente recibir/abrir el enlace. Borrado comprobado con alcance sólo del tablero, sin purgar el archivo.
+
 Este informe registra el cierre del ciclo 002 y la validación activa del ciclo 003. Última actualización: 12 de septiembre de 2026.
 
 ## Prepublicación del 12 de septiembre

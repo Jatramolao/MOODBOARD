@@ -1,0 +1,64 @@
+
+> moodboard-editorial@0.1.0 test:backend
+> npm run typecheck && npm run lint && npm test
+
+
+> moodboard-editorial@0.1.0 typecheck
+> tsc --noEmit
+
+
+> moodboard-editorial@0.1.0 lint
+> eslint .
+
+
+> moodboard-editorial@0.1.0 test
+> node --test tests/backend/*.test.ts tests/frontend/*.test.ts
+
+✔ no genera operaciones cuando el tablero no cambió (0.8385ms)
+✔ genera un lote mínimo y ordenado para cambios mixtos (0.15675ms)
+✔ elimina primero por identidad lógica y conserva referencias de asset (0.100625ms)
+✔ omite la paleta ausente y conserva una paleta explícita (0.0715ms)
+✔ cloneBoard crea una copia profunda (0.058875ms)
+✔ normaliza nombres y valida identificadores (0.604083ms)
+✔ rechaza lotes vacíos o mal formados (0.259625ms)
+✔ valida tipo y límite de imágenes (0.127166ms)
+✔ traduce conflictos, cuotas e invitaciones a errores de dominio (0.483291ms)
+✔ no expone detalles internos de errores desconocidos (0.067917ms)
+✔ retira sólo la tarjeta cuyo activo fue compensado (0.740166ms)
+✔ la compensación repetida es idempotente (0.072375ms)
+✔ aplica los mismos límites de tamaño al previsualizar y persistir (1.931042ms)
+✔ reduce imágenes conservando su proporción y respetando el mínimo (0.306833ms)
+✔ permite ajustes pequeños de imagen mediante teclado sin deformarla (0.270292ms)
+✔ mantiene una tarjeta dentro de su sección al moverla o agrandarla (0.120416ms)
+✔ un arrastre más allá del lienzo termina en la última sección (0.118834ms)
+✔ conserva los errores de dominio enviados por el backend (0.519083ms)
+✔ muestra la causa validada del RPC sin caer en el mensaje genérico (0.387458ms)
+✔ recorta detalles internos después de un código de dominio (0.562167ms)
+✔ traduce límites temporales sin perder los datos del formulario (0.180875ms)
+✔ explica cuotas y permisos con acciones comprensibles (0.253959ms)
+✔ explica los conflictos de reutilización y los usos en otros tableros (0.10075ms)
+✔ la sesión expirada usa un mensaje global que no presupone mutaciones (0.121708ms)
+✔ acepta destinos internos y rechaza redirecciones externas (0.07525ms)
+✔ retirar sólo persiste item.delete y conserva la referencia (1.914042ms)
+✔ la eliminación completa borra el activo sólo después del guardado (0.153917ms)
+✔ un fallo de guardado no llama mark_asset_deleted (0.279708ms)
+✔ ASSET_IN_USE deja la tarjeta retirada y la referencia recuperable (0.09925ms)
+✔ un reintento sobre una tarjeta ya retirada no duplica operaciones (0.079291ms)
+✔ obtiene el tablero creado desde respuestas escalares o tabulares (0.459916ms)
+✔ rechaza respuestas sin ID antes de construir board=undefined (0.067916ms)
+✔ mapea proyectos snake_case con el rol de la membresía (0.103916ms)
+✔ normaliza números del tablero entregados como texto (0.088083ms)
+✔ preserva anclas y borrado lógico de comentarios (0.137417ms)
+✔ trata board_id del activo como origen informativo y mapea sus usos (0.443042ms)
+✔ muestra cero bytes sin inventar consumo en una biblioteca vacía (0.416708ms)
+✔ agrupa usos por activo sin mezclar tableros (0.100667ms)
+✔ crea una tarjeta con el activo existente y su ruta privada exacta (0.443ms)
+✔ rechaza la reinserción si el tablero no tiene una sección visible (0.204167ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 199.39225

@@ -1,0 +1,15 @@
+
+> moodboard-editorial@0.1.0 test:integration
+> node --test tests/integration/*.test.ts
+
+✔ el callback inválido vuelve a autenticación sin aceptar un destino externo (72.781542ms)
+✔ un token compartido malformado devuelve un error 404 normalizado (8.365833ms)
+✔ invitaciones y enlaces rechazan identificadores inválidos antes de consultar Supabase (10.352167ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 168.526875
