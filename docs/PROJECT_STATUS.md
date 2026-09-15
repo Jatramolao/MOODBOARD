@@ -9,17 +9,17 @@ Este documento resume la fase activa, la base publicada y las acciones necesaria
 
 ## Estado ejecutivo
 
-- **Fase**: publicación autorizada; merge a `main` en curso
+- **Fase**: ciclo 003 publicado y liberado
 - **Rama local**: `codex/003-reference-library-reuse`
-- **GitHub**: `main` y `origin/main` en `5b741b1`
-- **Producción**: deployment `dpl_GcaexVu1uX8APBxJrDudhxudJWXJ`, estado `Ready`
+- **GitHub**: `main` contiene el merge `0d6fd84` y está sincronizado con `origin/main`
+- **Producción**: deployment de `main`, estado `Ready`; dominios oficiales asignados
 - **Ciclo 002**: aprobado manualmente y cerrado por producto
-- **Spec 003**: `validation`; pasa a `released` tras el smoke productivo
-- **Plan 003**: implementación y validación completas; publicación en curso
+- **Spec 003**: `released`
+- **Plan 003**: completo
 - **Hallazgos de interacción**: los P1 de guardado y estado visible fueron corregidos y validados; los P2 restantes permanecen registrados para otra iteración
 - **Cuentas QA**: owner/editor/viewer creadas con autorización; permisos comprobados por RPC y sesiones secuenciales de navegador
 - **M003-E**: aprobado con offline visual, reconexión y edición simultánea en perfiles separados
-- **Responsable actual**: integración/publicación; merge y despliegue autorizados el 14 de septiembre
+- **Responsable actual**: planificación del próximo ciclo; publicación 003 cerrada
 - **Frontend**: paquetes 2 a 4 implementados localmente en `2b131b3`
 - **Puertas automáticas vigentes**: 45/45 unitarias, 7/7 HTTP autenticadas/anónimas, build aprobado y 0 vulnerabilidades de producción conocidas
 - **Dependencias de seguridad**: Next.js 16.3.5 y Sharp 0.35.4 fijados en el lockfile
@@ -78,17 +78,14 @@ estado visible de sincronización y reintento seguro tras pérdida de conexión 
 Offline real y concurrencia owner/editor comprobados en navegador; viewer sin escrituras
 de zoom. Evidencia: [informe de correcciones](qa/2026-09-13-corrections/REPORT.md).
 Puertas de esta fase: 45/45 unitarias y 7/7 HTTP autenticadas/anónimas; build y diff aprobados.
-Responsable actual: integración/QA. Push autorizado y completado el 13 de septiembre;
-ajustes publicados en la rama mediante `02c42ad`. Merge a `main` y despliegue productivo requieren autorización
-independiente. No se agregaron funcionalidades.
+Push de rama, merge a `main` y despliegue productivo completados. El smoke autenticado
+mostró el tablero en estado `Guardado` y cero errores de consola. No se agregaron funcionalidades.
 
 Los pendientes anteriores se conservan como historial y no equivalen a publicar esta fase.
 
-0. Priorizar [los hallazgos de interacción](qa/2026-09-10/REPORT.md), empezando por borradores de notas, estado de guardado y accesibilidad de navegación
-1. Ejecutar M003-E manual con perfiles separados de editor y viewer
-2. Interrumpir y restaurar red durante firmado y reinserción
-3. Publicar la rama autorizada y ejecutar el smoke de preview
-4. Corregir y repetir los hallazgos priorizados antes de solicitar merge/despliegue
+0. Validar con el fotógrafo el flujo publicado de acceso y tablero compartido
+1. Priorizar los P2 restantes de navegación y accesibilidad en una nueva iteración
+2. Mantener las regresiones de guardado, offline, concurrencia y enlaces en cada publicación
 
 La aprobación habilita trabajo local. Las migraciones productivas, push, merge y despliegue necesitan autorizaciones independientes.
 

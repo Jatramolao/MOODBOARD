@@ -7,7 +7,7 @@ meta:
 
 ## Correcciones verificadas del 13 de septiembre de 2026
 
-**Guardado, reconexión y enlaces compartidos aprobados para publicación.**
+**Guardado, reconexión y enlaces compartidos publicados en producción.**
 [Informe completo](docs/qa/2026-09-13-corrections/REPORT.md).
 
 - Notas guardadas mientras se escribe, sin depender de blur.

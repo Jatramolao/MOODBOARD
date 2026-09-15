@@ -74,8 +74,7 @@ Las pruebas HTTP se ejecutan con `npm run test:integration`; los casos autentica
 requieren `TEST_QA_STATE_PATH` apuntando al archivo privado de las cuentas QA y las
 variables Supabase del entorno local. Sin esos datos se omiten explícitamente.
 
-Merge a `main` y publicación productiva pendientes de autorización independiente.
-Después del despliegue debe
-realizarse smoke en el dominio público y generar un enlace nuevo de un tablero activo
-antes de entregarlo al fotógrafo. Otros hallazgos de navegación de la auditoría anterior
-no se cierran mediante estas correcciones.
+Merge a `main` y publicación productiva autorizados y completados el 14 de septiembre.
+El smoke autenticado cargó el tablero con estado `Guardado` y cero errores de consola.
+Antes de entregarlo al fotógrafo debe generarse un enlace nuevo de un tablero activo.
+Otros hallazgos P2 de navegación de la auditoría anterior no se cierran mediante estas correcciones.
