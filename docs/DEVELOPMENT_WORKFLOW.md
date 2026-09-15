@@ -1,192 +1,92 @@
-# Ciclo de desarrollo e integración
+---
+meta:
+  contentType: How-to
+---
 
-Esta guía es la referencia común para todas las sesiones del proyecto. Una
-fase terminada debe dejar código verificable, documentación suficiente y un
-handoff concreto para la fase siguiente.
+# Ejecutar una iteración del proyecto
 
-## Principio de trabajo
+Este flujo coordina las sesiones de planificación, backend, frontend, integración y despliegue dentro del mismo repositorio. Cada iteración usa una rama y separa los commits por responsabilidad.
 
-Las sesiones están separadas por responsabilidad, no por repositorio. Todas
-trabajan sobre el mismo workspace y una misma rama por iteración. El orden
-normal es:
+## Preparar la iteración
 
-```text
-spec → backend → pruebas backend → frontend → integración/E2E → preview → producción
-```
+1. Lee `AGENTS.md`, `docs/PROJECT_STATUS.md` y la referencia de tu capa
+2. Ejecuta `git status --short --branch` y `git log -5 --oneline`
+3. Preserva cualquier cambio sin commit que no te pertenezca
+4. Crea o continúa `codex/NNN-tema`
+5. Confirma que la spec está `approved`
 
-Backend y frontend pueden tener commits independientes, pero una funcionalidad
-queda terminada sólo después de validar el recorrido integrado.
-
-## 1. Planificación y spec
-
-Responsable: sesión de producto/planificación.
-
-Debe definir:
-
-- problema, objetivo e historias de usuario;
-- alcance incluido y excluido;
-- flujos, roles y permisos;
-- reglas de negocio y estados límite;
-- cambios de datos/API/UI;
-- criterios de aceptación y pruebas;
-- estrategia de despliegue y rollback cuando corresponda.
-
-La spec se guarda como `docs/specs/NNN-nombre.md` y comienza con estado
-`draft`. Pasa a `approved` antes de implementar.
-
-## 2. Preparación Git
-
-Al comenzar una iteración:
-
-```bash
-git status --short --branch
-git log -5 --oneline
-git switch -c codex/NNN-nombre
-```
-
-Si la rama ya existe, todas las sesiones continúan en ella. No crear una rama
-por chat. Los commits sí se separan por capa:
+Una spec sigue este ciclo:
 
 ```text
-feat(backend): ...
-test(backend): ...
-feat(frontend): ...
-fix(integration): ...
-docs: ...
+draft → approved → implementation → validation → released
 ```
 
-## 3. Implementación backend
+Usa `cancelled` cuando producto descarte el trabajo. Actualiza el estado de la spec al transferir cada fase.
 
-Responsable: sesión backend.
+## Implementar por capa
 
-Secuencia:
+Ejecuta las capas en este orden cuando compartan archivos o contratos:
 
-1. Leer spec, estado del proyecto y contrato vigente.
-2. Diseñar migración, RPC/endpoints, tipos, permisos, errores y límites.
-3. Mantener compatibilidad con el frontend vigente cuando sea posible.
-4. Implementar RLS y seguridad junto con la funcionalidad.
-5. Añadir pruebas unitarias y SQL transaccionales.
-6. Ejecutar validación mínima y corregir hasta quedar en verde.
-7. Actualizar `docs/BACKEND.md`, operaciones y handoff de frontend.
-8. Crear un commit local acotado.
+```text
+planificación → backend → frontend → integración → publicación
+```
 
-No aplicar una migración incompatible en producción antes de que exista un
-cliente compatible. Para cambios incompatibles usar el patrón
-expandir → migrar → contraer en iteraciones separadas.
+### Planificación
 
-## 4. Handoff backend → frontend
+Define el problema, alcance, reglas, permisos, estados límite, criterios de aceptación, prueba manual y rollback. Guarda la spec en `docs/specs/NNN-tema.md`.
 
-El handoff debe indicar:
+### Backend
 
-- commit base;
-- spec y contratos relevantes;
-- métodos y endpoints disponibles;
-- forma de datos y mapeadores;
-- roles y permisos;
-- códigos de error y comportamiento esperado;
-- variables nuevas;
-- pruebas aprobadas;
-- asuntos deliberadamente pendientes.
+Define datos, funciones, errores, Row Level Security (RLS), límites y compatibilidad. Añade pruebas TypeScript y SQL transaccionales, actualiza `docs/BACKEND.md` y crea un commit acotado.
 
-La sesión de frontend verifica antes de editar:
+No apliques un cambio incompatible antes de disponer de un cliente compatible. Usa expandir, migrar y contraer cuando debas cambiar un contrato.
+
+### Frontend
+
+Consume `lib/backend/client.ts` y los mapeadores existentes. Cubre carga, vacío, error, permisos, red, conflicto, accesibilidad y responsive.
+
+No inventes consultas paralelas ni modifiques una migración para resolver un problema visual. Devuelve a backend cualquier incompatibilidad demostrada.
+
+### Integración
+
+Prueba autenticación, proyectos, tableros, activos, roles, invitaciones, enlaces compartidos, comentarios, concurrencia, red, responsive y accesibilidad. Añade una regresión por defecto corregido.
+
+Actualiza `QA_REPORT.md` y `docs/PROJECT_STATUS.md`. Elimina los handoffs transitorios cuando la información vigente ya esté consolidada.
+
+## Validar una entrega
+
+Ejecuta como mínimo:
 
 ```bash
-git status --short --branch
-git log -5 --oneline
 npm run test:backend
+npm run build
+git diff --check
 ```
 
-## 5. Implementación frontend
+Integración añade las pruebas HTTP, end-to-end (E2E), recorridos por rol y la puerta manual definida en la spec.
 
-Responsable: sesión frontend.
+## Publicar una iteración
 
-Secuencia:
+1. Obtén autorización para publicar la rama
+2. Construye y valida el preview
+3. Crea una pull request con spec, resultados, riesgos y rollback
+4. Obtén autorización para merge y despliegue
+5. Confirma variables y migraciones
+6. Despliega y ejecuta el smoke productivo
+7. Marca la spec como `released`
+8. Reduce `PROJECT_STATUS.md` al nuevo estado vigente
 
-1. Leer spec, `PROJECT_STATUS` y `FRONTEND_HANDOFF`.
-2. Confirmar el contrato existente; no inventar consultas paralelas.
-3. Implementar flujos, componentes y mapeadores.
-4. Cubrir loading, vacío, error, permisos, offline y conflictos.
-5. Validar owner/editor/viewer y accesibilidad.
-6. Revisar responsive en 390, 768, 1280 y 1440 px.
-7. Ejecutar pruebas y build completos.
-8. Crear un commit separado del backend.
+Una autorización no implica la siguiente. Push, pull request, merge, migraciones productivas y despliegue conservan puertas separadas.
 
-Si necesita cambiar un contrato backend, debe detener esa parte, documentar la
-incompatibilidad y devolverla a la sesión backend; no modificar silenciosamente
-la migración o la política RLS.
+## Cerrar la documentación
 
-## 6. Integración y QA
+Al cerrar una iteración:
 
-Responsable: sesión de integración/QA.
+- Conserva la spec liberada hasta iniciar el siguiente ciclo
+- Conserva sólo la puerta manual activa
+- Integra decisiones permanentes en los contratos de capa
+- Elimina planes ejecutados y handoffs integrados
+- Elimina incidentes cerrados de `PROJECT_STATUS.md` y `QA_REPORT.md`
+- Usa Git para consultar el historial
 
-Debe probar como mínimo:
-
-- autenticación y recuperación de destino;
-- proyectos y múltiples tableros;
-- imágenes privadas y compartidas;
-- persistencia y recarga;
-- dos sesiones editando el mismo tablero;
-- owner, editor, viewer y `can_comment=false`;
-- invitación, aceptación, expiración y revocación;
-- enlace `view`, enlace `comment` y revocación;
-- comentarios, respuestas y resolución;
-- errores de red, conflicto de versión y cuotas;
-- consola, accesibilidad y responsive.
-
-Cada corrección recibe un commit pequeño. Después de corregir se repite la
-ronda afectada y la validación mínima completa.
-
-## 7. Preview y pull request
-
-Cuando la integración está verde:
-
-1. El usuario autoriza el `push` de la rama.
-2. Vercel construye un preview.
-3. Se crea una PR hacia `main` con:
-   - resumen y spec;
-   - migraciones y variables;
-   - resultados de pruebas;
-   - capturas o recorrido visual;
-   - riesgos y rollback.
-4. Se ejecuta un smoke test en el preview.
-
-Un push de respaldo puede hacerse antes, con autorización, pero no equivale a
-aprobar producción.
-
-## 8. Producción
-
-Orden de salida:
-
-1. Confirmar variables y secretos.
-2. Confirmar backup/rollback de datos.
-3. Aplicar migraciones compatibles.
-4. Fusionar la PR a `main`.
-5. Esperar el despliegue Vercel.
-6. Ejecutar smoke tests productivos.
-7. Revisar logs de Vercel y Supabase.
-8. Marcar la spec como `released` y actualizar `PROJECT_STATUS`.
-
-## Checklist de iteración
-
-```text
-[ ] Spec aprobada
-[ ] Rama de iteración creada/verificada
-[ ] Contrato backend definido
-[ ] Backend implementado y probado
-[ ] Handoff frontend actualizado
-[ ] Frontend implementado y probado
-[ ] Integración E2E aprobada
-[ ] Preview validado
-[ ] PR aprobada
-[ ] Variables y migraciones confirmadas
-[ ] Producción desplegada
-[ ] Smoke test aprobado
-[ ] Spec y estado del proyecto actualizados
-```
-
-## Condición de “terminado”
-
-Una tarea no está terminada sólo porque compila o porque una capa está lista.
-Está terminada cuando cumple sus criterios de aceptación, pasa pruebas de capa
-e integración, está documentada y cuenta con una decisión explícita de
-publicación o postergación.
+Una iteración termina cuando cumple sus criterios, pasa integración, documenta su resultado y recibe una decisión de publicación o postergación.

@@ -1,0 +1,57 @@
+{
+  "projectCreation": "PASS via UI",
+  "boardCreation": "PASS via UI",
+  "projectSwitch": "PASS both directions",
+  "createdProjectUrl": "http://127.0.0.1:3000/?board=b6d11a43-7ba1-4eae-8bcf-e47b5eb0a8d4",
+  "movement": {
+    "before": {
+      "height": "270px",
+      "rect": {
+        "bottom": 406.91998291015625,
+        "height": 221.3999938964844,
+        "left": 507.1199951171875,
+        "right": 687.52001953125,
+        "top": 185.51998901367188,
+        "width": 180.4000244140625,
+        "x": 507.1199951171875,
+        "y": 185.51998901367188
+      },
+      "width": "220px",
+      "x": "316px",
+      "y": "136px"
+    },
+    "after": {
+      "height": "270px",
+      "width": "220px",
+      "x": "413.56px",
+      "y": "209.17px"
+    },
+    "persisted": [
+      {
+        "height": "324.96px",
+        "width": "264.78px",
+        "x": "413.56px",
+        "y": "209.17px"
+      }
+    ]
+  },
+  "resize": {
+    "after": {
+      "height": "324.96px",
+      "width": "264.78px",
+      "x": "413.56px",
+      "y": "209.17px"
+    },
+    "persisted": [
+      {
+        "height": "324.96px",
+        "width": "264.78px",
+        "x": "413.56px",
+        "y": "209.17px"
+      }
+    ]
+  },
+  "imageRemoval": "PASS remove-only and reinsert with editor in preceding run",
+  "accessEmail": "Application confirmed request sent; opening delivered link pending",
+  "network": "6 transport checks passed; browser offline not executed"
+}

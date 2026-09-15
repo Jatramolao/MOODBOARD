@@ -2,13 +2,18 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { mapBackendError } from "./errors";
+import { mapAssetUsage } from "./mappers";
 import { validateOperations } from "./validation";
 import type {
   ApplyOperationsInput,
   ApplyOperationsResult,
+  SignedAssetUrl,
   SharePermission,
   SharedBoardPayload,
 } from "./types";
+
+const ASSET_BUCKET = "board-assets";
+const SIGNED_ASSET_TTL_SECONDS = 60 * 60 * 8;
 
 function requireClient() {
   const client = createClient();
@@ -314,9 +319,35 @@ export const backend = {
     );
   },
 
+  async signAssetPaths(storagePaths: string[]): Promise<SignedAssetUrl[]> {
+    const paths = [...new Set(storagePaths)].filter(Boolean);
+    if (!paths.length) return [];
+    const { data, error } = await requireClient().storage
+      .from(ASSET_BUCKET)
+      .createSignedUrls(paths, SIGNED_ASSET_TTL_SECONDS);
+    if (error) throw mapBackendError(error);
+    return (data ?? []).map((entry: { path: string; signedUrl: string | null; error?: string | null }) => ({
+      path: entry.path,
+      signedUrl: entry.signedUrl,
+      error: entry.error ?? null,
+    }));
+  },
+
   async markAssetDeleted(assetId: string) {
     await unwrap(
       requireClient().rpc("mark_asset_deleted", { p_asset_id: assetId }),
+    );
+  },
+
+  async listAssetUsages(projectId: string, assetIds?: string[]) {
+    const data = await unwrap(
+      requireClient().rpc("list_asset_usages", {
+        p_project_id: projectId,
+        p_asset_ids: assetIds ?? null,
+      }),
+    );
+    return (Array.isArray(data) ? data : []).map((row) =>
+      mapAssetUsage(row as Record<string, unknown>),
     );
   },
 

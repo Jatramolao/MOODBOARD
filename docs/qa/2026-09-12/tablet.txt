@@ -1,0 +1,59 @@
+- link "Saltar al tablero":
+  - /url: "#board-main"
+- complementary "Navegación del proyecto":
+  - generic "Moodboard": M MOODBOARD
+  - button "Proyecto QA-20260912 af4fe910":
+    - generic: Proyecto
+    - text: QA-20260912 af4fe910
+  - navigation "Secciones del proyecto":
+    - button:
+    - button:
+    - button:
+    - button:
+  - region "Tableros del proyecto":
+    - button "Crear tablero":
+    - button "▦"
+    - button "▦"
+  - button "QE":
+    - generic: QE
+- banner:
+  - generic "Ruta actual":
+    - strong: QA-20260912 af4fe910
+    - generic: Tablero general
+  - button "Buscar en el tablero":
+  - button "Abrir comentarios":
+  - button "Abrir notificaciones":
+  - button "Compartir":
+    - text: Compartir
+- main:
+  - heading "Moodboard de Campaña Otoño 2026" [level=1]
+  - generic "Herramientas del tablero":
+    - button "Imagen":
+      - text: Imagen
+    - button "Nota":
+      - text: Nota
+    - button "Alejar":
+    - status "Zoom 82%": 82%
+    - button "Acercar":
+    - button "Ajustar tablero":
+    - button "Choose File"
+  - generic "Lienzo desplazable del moodboard":
+    - region "TABLERO PRINCIPAL":
+      - generic: "01"
+      - heading "TABLERO PRINCIPAL" [level=2]
+    - article "QA roles; arrastrable":
+      - button "Comentar QA roles":
+      - button "Eliminar QA roles":
+      - textbox "Título de la nota": QA roles
+      - textbox "Contenido de la nota": QA editor guardado confirmado
+      - generic: — M.S.
+      - button "Redimensionar QA roles"
+    - article "QA pixel; arrastrable":
+      - button "Comentar QA pixel":
+      - button "Elegir cómo retirar QA pixel":
+      - img "QA pixel"
+      - generic: QA pixel
+      - button "Redimensionar QA pixel"
+    - button "Extender tablero":
+      - text: Extender tablero
+- alert

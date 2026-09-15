@@ -1,0 +1,7 @@
+{
+  "noteDraftReload": "Texto perdido dos veces al recargar sin blur; persiste después de Tab.",
+  "search": "Óptica recibe foco pero queda parcialmente fuera del viewport de 1280.",
+  "tablet": "Cuatro botones de navegación sin nombre accesible a 768px.",
+  "mobile": "Sin búsqueda ni estado guardado; Ajustar tablero conserva 82%.",
+  "console": []
+}

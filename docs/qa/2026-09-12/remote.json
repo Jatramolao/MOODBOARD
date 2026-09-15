@@ -1,0 +1,92 @@
+{
+  "run": "af4fe910-887d-4ba6-9ea8-38c8e7e43b7c",
+  "project": {
+    "project_id": "85090584-7395-4e79-b284-26f2ebaabf56",
+    "board_id": "e538020d-c784-4b47-a61f-aa5a586293ff"
+  },
+  "second": "f20768b0-a2e7-4b11-a84b-d4a14f9e5ab7",
+  "users": {
+    "owner": {
+      "id": "95892904-2462-48e9-9eb0-d454f1a8e8e1",
+      "email": "qa-owner-af4fe910-887d-4ba6-9ea8-38c8e7e43b7c@example.invalid"
+    },
+    "editor": {
+      "id": "75d8550b-d3c7-4f6d-9323-e49818b71ae3",
+      "email": "qa-editor-af4fe910-887d-4ba6-9ea8-38c8e7e43b7c@example.invalid"
+    },
+    "viewer": {
+      "id": "e60b9a37-f396-4a88-92e2-fce7f68236e5",
+      "email": "qa-viewer-af4fe910-887d-4ba6-9ea8-38c8e7e43b7c@example.invalid"
+    }
+  },
+  "checks": [
+    {
+      "name": "login owner",
+      "pass": true
+    },
+    {
+      "name": "login editor",
+      "pass": true
+    },
+    {
+      "name": "login viewer",
+      "pass": true
+    },
+    {
+      "name": "membership editor",
+      "pass": true
+    },
+    {
+      "name": "membership viewer",
+      "pass": true
+    },
+    {
+      "name": "read board owner",
+      "pass": true
+    },
+    {
+      "name": "read board editor",
+      "pass": true
+    },
+    {
+      "name": "read board viewer",
+      "pass": true
+    },
+    {
+      "name": "editor write",
+      "pass": true
+    },
+    {
+      "name": "retry idempotent",
+      "pass": true
+    },
+    {
+      "name": "viewer mutation denied",
+      "pass": true
+    },
+    {
+      "name": "stale version conflict",
+      "pass": true
+    },
+    {
+      "name": "viewer reads two asset usages",
+      "pass": true
+    },
+    {
+      "name": "duplicate rejected",
+      "pass": true
+    },
+    {
+      "name": "asset in use protected",
+      "pass": true
+    },
+    {
+      "name": "private thumbnail fetch",
+      "pass": true
+    },
+    {
+      "name": "viewer without comment permission denied",
+      "pass": true
+    }
+  ]
+}

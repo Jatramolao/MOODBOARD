@@ -1,0 +1,72 @@
+- alert
+- link "Saltar al tablero":
+  - /url: "#board-main"
+- complementary "Navegación del proyecto":
+  - generic "Moodboard": MOODBOARD
+  - button "Proyecto QA-20260912 af4fe910":
+    - generic: Proyecto
+    - text: QA-20260912 af4fe910
+  - navigation "Secciones del proyecto":
+    - button "Tableros":
+      - generic: Tableros
+    - button "Referencias":
+      - generic: Referencias
+    - button "Equipo":
+      - generic: Equipo
+    - button "Actividad":
+      - generic: Actividad
+  - region "Tableros del proyecto":
+    - generic: Tableros
+    - button "Tablero general v3":
+      - generic: Tablero general
+      - generic: v3
+    - button "QA segundo tablero v2":
+      - generic: QA segundo tablero
+      - generic: v2
+    - button "Ver archivados":
+      - text: Ver archivados
+  - button "QV QA viewer Invitado":
+    - generic: QV
+    - strong: QA viewer
+    - generic: Invitado
+  - button "Cerrar sesión":
+- banner:
+  - generic "Ruta actual":
+    - strong: QA-20260912 af4fe910
+    - generic: Tablero general
+  - status:
+    - text: Guardado
+  - generic "1 colaboradores conectados":
+    - generic "QA viewer": QV
+  - button "Buscar en el tablero":
+  - button "Abrir comentarios":
+  - button "Abrir notificaciones":
+  - button "Compartir":
+    - text: Compartir
+- main:
+  - heading "Moodboard de Campaña Otoño 2026" [level=1]
+  - generic "Herramientas del tablero":
+    - button "Imagen" [disabled]:
+      - text: Imagen
+    - button "Nota" [disabled]:
+      - text: Nota
+    - button "Alejar":
+    - status "Zoom 82%": 82%
+    - button "Acercar":
+    - button "Ajustar tablero":
+    - button "Choose File"
+  - generic "Lienzo desplazable del moodboard":
+    - region "TABLERO PRINCIPAL":
+      - generic: "01"
+      - heading "TABLERO PRINCIPAL" [level=2]
+    - article "QA roles; arrastrable":
+      - button "Comentar QA roles":
+      - strong: QA roles
+      - paragraph: persistencia API
+      - generic: — M.S.
+    - article "QA referencia reutilizable; arrastrable":
+      - button "Comentar QA referencia reutilizable":
+      - img "QA referencia reutilizable"
+      - generic: QA referencia reutilizable
+    - button "Extender tablero" [disabled]:
+      - text: Extender tablero

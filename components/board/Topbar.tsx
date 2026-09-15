@@ -65,7 +65,8 @@ export function Topbar({
           aria-live="polite"
         >
           <CloudCheck size={16} weight="duotone" />
-          {syncLabels[meta.syncStatus]}
+          {meta.versionConflict ? "Edición pausada" : syncLabels[meta.syncStatus]}
+          {meta.syncError && !meta.versionConflict && <span className="save-error-detail">{meta.syncError}</span>}
         </span>
         <div
           className="avatar-stack"

@@ -6,6 +6,7 @@ import {
   use,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -24,11 +25,13 @@ import {
 import type {
   BoardActions,
   BoardCard,
+  ExistingBoardAsset,
   BoardMeta,
   BoardState,
 } from "@/lib/board-types";
 import { frontendErrorMessage, readBackendError } from "@/lib/frontend-errors";
 import { executeImageRemoval } from "@/lib/image-removal";
+import { buildExistingAssetCard } from "@/lib/reference-library";
 
 const STORAGE_KEY = "moodboard.workspace.v1";
 const MIN_SECTION_WIDTH = 420;
@@ -79,10 +82,19 @@ export function BoardProvider({
   const [syncError, setSyncError] = useState<string>();
   const [versionConflict, setVersionConflict] = useState(false);
   const [networkOnline, setNetworkOnline] = useState(true);
+  const [retryTick, setRetryTick] = useState(0);
+  const [confirmedBoard, setConfirmedBoard] = useState<BoardState | null>(null);
+  const latestState = useRef(state);
+  const confirmedState = useRef<BoardState | null>(null);
+  const savesInFlight = useRef(0);
+  const retryTimer = useRef<number | undefined>(undefined);
   const suppressNextSave = useRef(false);
   const lastLocalSave = useRef(0);
   const pendingUploads = useRef(new Map<string, UploadedBoardAsset>());
   const removalsInFlight = useRef(new Set<string>());
+
+  useLayoutEffect(() => { latestState.current = state; }, [state]);
+  useEffect(() => () => window.clearTimeout(retryTimer.current), []);
 
   useEffect(() => {
     const updateNetworkState = () => {
@@ -123,15 +135,26 @@ export function BoardProvider({
       try {
         const remote = await adapter.load();
         if (!mounted) return;
-        if (remote) setState(remote);
+        if (remote) {
+          confirmedState.current = remote;
+          setConfirmedBoard(remote);
+          latestState.current = remote;
+          setState(remote);
+        }
         setSyncStatus("saved");
         setHydrated(true);
 
         const refreshRemote = async () => {
+          const canRefresh = () => mounted && navigator.onLine && !savesInFlight.current &&
+              (readOnly || JSON.stringify(latestState.current) === JSON.stringify(confirmedState.current));
+          if (!canRefresh()) return;
           try {
-            const updated = await adapter.load();
+            const updated = await adapter.load(canRefresh);
             if (!mounted || !updated) return;
             suppressNextSave.current = true;
+            confirmedState.current = updated;
+            setConfirmedBoard(updated);
+            latestState.current = updated;
             setState(updated);
             setSyncStatus("saved");
           } catch (error) {
@@ -168,10 +191,11 @@ export function BoardProvider({
       if (remoteRefreshTimer) window.clearTimeout(remoteRefreshTimer);
       unsubscribe?.();
     };
-  }, [adapter]);
+  }, [adapter, readOnly]);
 
   useEffect(() => {
     if (!hydrated) return;
+    if (adapter && (readOnly || versionConflict)) return;
     if (suppressNextSave.current) {
       suppressNextSave.current = false;
       return;
@@ -183,14 +207,17 @@ export function BoardProvider({
     const persist = async () => {
       try {
         if (adapter) {
+          savesInFlight.current += 1;
           setSyncStatus("saving");
           lastLocalSave.current = Date.now();
           await adapter.save(state);
+          confirmedState.current = state;
+          setConfirmedBoard(state);
           const savedCardIds = new Set(state.cards.map((card) => card.id));
           pendingUploads.current.forEach((_, cardId) => {
             if (savedCardIds.has(cardId)) pendingUploads.current.delete(cardId);
           });
-          setSyncStatus("saved");
+          setSyncStatus(JSON.stringify(latestState.current) === JSON.stringify(state) ? "saved" : "saving");
           setSyncError(undefined);
         } else {
           window.localStorage.setItem(
@@ -201,6 +228,19 @@ export function BoardProvider({
         }
       } catch (error) {
         const mapped = readBackendError(error);
+        if (mapped.code === "VERSION_CONFLICT") {
+          setVersionConflict(true);
+          setSyncStatus("error");
+          setSyncError(frontendErrorMessage(error, "El tablero cambió en otra sesión. El borrador local se conserva."));
+          return;
+        }
+        if (mapped.retryable) {
+          setSyncStatus(navigator.onLine ? "error" : "offline");
+          setSyncError(mapped.message);
+          window.clearTimeout(retryTimer.current);
+          retryTimer.current = window.setTimeout(() => setRetryTick((tick) => tick + 1), mapped.code === "RATE_LIMITED" ? 10_000 : 2_000);
+          return;
+        }
         const pending = [...pendingUploads.current.entries()].filter(([cardId]) =>
           state.cards.some((card) => card.id === cardId),
         );
@@ -239,6 +279,8 @@ export function BoardProvider({
               const remote = await adapter.load();
               if (remote) {
                 suppressNextSave.current = true;
+                confirmedState.current = remote;
+                setConfirmedBoard(remote);
                 setState(remote);
                 pending.forEach(([cardId]) => pendingUploads.current.delete(cardId));
                 setSyncStatus("saved");
@@ -257,15 +299,14 @@ export function BoardProvider({
           : pending.length
             ? `${message} La carga incompleta se retiró del tablero y de Referencias.`
             : message);
-        if (mapped.code === "VERSION_CONFLICT") {
-          setVersionConflict(true);
-        }
+      } finally {
+        if (adapter) savesInFlight.current -= 1;
       }
     };
 
     const id = window.setTimeout(() => void persist(), adapter ? 520 : 180);
     return () => window.clearTimeout(id);
-  }, [adapter, hydrated, networkOnline, state]);
+  }, [adapter, hydrated, networkOnline, readOnly, retryTick, state, versionConflict]);
 
   const sectionOffsets = useMemo(() => {
     const offsets = new Map<string, number>();
@@ -394,6 +435,49 @@ export function BoardProvider({
     });
   }, [adapter, readOnly, versionConflict]);
 
+  const addExistingImage = useCallback(async (asset: ExistingBoardAsset) => {
+    if (readOnly || versionConflict) {
+      throw new Error("Tu rol no permite añadir esta referencia.");
+    }
+    const existing = state.cards.find((card) => card.assetId === asset.assetId);
+    if (existing) return { cardId: existing.id, status: "existing" as const };
+
+    const card = buildExistingAssetCard(state, asset, crypto.randomUUID());
+    const next = { ...state, cards: [...state.cards, card] };
+    setSyncStatus("saving");
+    setSyncError(undefined);
+    try {
+      if (adapter) {
+        lastLocalSave.current = Date.now();
+        savesInFlight.current += 1;
+        try { await adapter.save(next); }
+        finally { savesInFlight.current -= 1; }
+        confirmedState.current = next;
+        setConfirmedBoard(next);
+        suppressNextSave.current = true;
+      } else {
+        window.localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ version: 1, board: next }),
+        );
+      }
+      setState(next);
+      setSyncStatus(adapter ? "saved" : "local");
+      window.dispatchEvent(new CustomEvent("moodboard:assets-changed"));
+      return { cardId: card.id, status: "created" as const };
+    } catch (cause) {
+      const mapped = readBackendError(cause);
+      const message = frontendErrorMessage(
+        cause,
+        "No pudimos añadir la referencia al tablero.",
+      );
+      setSyncStatus("error");
+      setSyncError(message);
+      if (mapped.code === "VERSION_CONFLICT") setVersionConflict(true);
+      throw cause;
+    }
+  }, [adapter, readOnly, state, versionConflict]);
+
   const moveCard = useCallback(
     (cardId: string, globalX: number, y: number) => {
       if (readOnly || versionConflict) return;
@@ -489,7 +573,11 @@ export function BoardProvider({
         persistBoard: async (next) => {
           if (adapter) {
             lastLocalSave.current = Date.now();
-            await adapter.save(next);
+            savesInFlight.current += 1;
+            try { await adapter.save(next); }
+            finally { savesInFlight.current -= 1; }
+            confirmedState.current = next;
+            setConfirmedBoard(next);
           } else {
             window.localStorage.setItem(
               STORAGE_KEY,
@@ -551,7 +639,7 @@ export function BoardProvider({
     setState((current) => ({
       ...current,
       cards: current.cards.map((card) =>
-        card.id === cardId ? { ...card, title: title.trim() || "Sin título", content } : card,
+        card.id === cardId ? { ...card, title, content } : card,
       ),
     }));
   }, [readOnly, versionConflict]);
@@ -593,6 +681,7 @@ export function BoardProvider({
       addSection,
       addNote,
       addImages,
+      addExistingImage,
       moveCard,
       resizeCard,
       removeCard,
@@ -603,6 +692,7 @@ export function BoardProvider({
     }),
     [
       addImages,
+      addExistingImage,
       addNote,
       addSection,
       moveCard,
@@ -618,7 +708,8 @@ export function BoardProvider({
   const meta = useMemo<BoardMeta>(
     () => ({
       hydrated,
-      syncStatus,
+      syncStatus: adapter && !readOnly && syncStatus === "saved" && confirmedBoard &&
+        JSON.stringify(state) !== JSON.stringify(confirmedBoard) ? "saving" : syncStatus,
       syncError,
       canEdit: !readOnly && !versionConflict,
       versionConflict,
@@ -626,6 +717,9 @@ export function BoardProvider({
       sectionOffsets,
     }),
     [
+      adapter,
+      confirmedBoard,
+      state,
       hydrated,
       sectionOffsets,
       syncError,

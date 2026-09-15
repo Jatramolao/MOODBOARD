@@ -32,6 +32,8 @@ export default async function Home({ searchParams }: HomeProps) {
   let query = supabase
     .from("boards")
     .select("id,name,project_id,projects!inner(name)")
+    .is("archived_at", null)
+    .is("projects.archived_at", null)
     .order("created_at")
     .limit(1);
   if (requestedBoard) query = query.eq("id", requestedBoard);
@@ -44,6 +46,7 @@ export default async function Home({ searchParams }: HomeProps) {
     "Creativo";
 
   if (!board) {
+    if (requestedBoard) redirect("/");
     return (
       <WorkspaceSetup
         error={

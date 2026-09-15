@@ -77,6 +77,23 @@ function Workspace({ runtime }: { runtime: WorkspaceRuntime }) {
     return () => window.removeEventListener("moodboard:comment", openComments);
   }, []);
 
+  useEffect(() => {
+    if (runtime.kind !== "supabase" || !meta.hydrated) return;
+    const focusId = new URLSearchParams(window.location.search).get("focus");
+    if (!focusId) return;
+    const timer = window.setTimeout(() => {
+      const card = Array.from(document.querySelectorAll<HTMLElement>("[data-card-id]"))
+        .find((element) => element.dataset.cardId === focusId);
+      card?.focus();
+      if (card) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("focus");
+        window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+      }
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [meta.hydrated, runtime]);
+
   return (
     <div className="app-shell">
       <a className="skip-link" href="#board-main">

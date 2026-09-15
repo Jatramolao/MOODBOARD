@@ -23,6 +23,11 @@ export async function POST(request: Request) {
       throw new Error("VALIDATION_ERROR: expiresAt");
     }
     const supabase = await createClient();
+    const { data: board, error: boardError } = await supabase.from("boards")
+      .select("id,projects!inner(id)").eq("id", body.boardId)
+      .is("archived_at", null).is("projects.archived_at", null).maybeSingle();
+    if (boardError) throw boardError;
+    if (!board) throw new Error("NOT_FOUND: tablero no disponible");
     const { data, error } = await supabase.rpc("create_board_share_link", {
       p_board_id: body.boardId,
       p_permission: body.permission ?? "view",
@@ -30,7 +35,8 @@ export async function POST(request: Request) {
     });
     if (error) throw error;
     const result = Array.isArray(data) ? data[0] : data;
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+    if (!result || !/^[a-f0-9]{64}$/i.test(result.share_token ?? "")) throw new Error("No se pudo crear el enlace.");
+    const origin = new URL(request.url).origin;
     return NextResponse.json(
       {
         shareId: result.share_id,

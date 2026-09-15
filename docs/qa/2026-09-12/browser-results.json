@@ -1,0 +1,16 @@
+{
+  "roles": [
+    "owner",
+    "viewer",
+    "editor"
+  ],
+  "ownerDraftReload": "FAIL: Guardado visible; draft reverts to persistencia API",
+  "viewer": "PASS: editing disabled, no delete in library, no comment composer",
+  "editor": "PASS: edit with blur persists; remove and reinsert yields one card after reload",
+  "tablet": "FAIL: unnamed navigation buttons and hidden save status",
+  "mobile": "FAIL: search/project switching unavailable, save hidden, fit remains 82%",
+  "consoleCounts": {
+    "errors": 0,
+    "warnings": 0
+  }
+}

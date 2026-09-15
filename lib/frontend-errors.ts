@@ -28,7 +28,8 @@ export function frontendErrorMessage(error: unknown, fallback: string) {
   if (mapped.code === "QUOTA_EXCEEDED") return "El proyecto alcanzó su límite activo. Archiva un proyecto, tablero o activo que ya no necesites y vuelve a intentarlo.";
   if (mapped.code === "UNAUTHORIZED") return "Tu sesión expiró. Vuelve a ingresar para continuar.";
   if (mapped.code === "FORBIDDEN") return "Tu rol no permite realizar esta acción.";
-  if (mapped.code === "ASSET_IN_USE") return "Este activo todavía está utilizado en el tablero.";
+  if (mapped.code === "ASSET_IN_USE") return "Este activo todavía se usa en uno o más tableros del proyecto.";
+  if (mapped.code === "ASSET_ALREADY_ON_BOARD") return "Esta referencia ya existe en el tablero. Abriremos su tarjeta actual.";
   return mapped.message && !["Error inesperado.", "Error inesperado del backend."].includes(mapped.message)
     ? mapped.message
     : fallback;
