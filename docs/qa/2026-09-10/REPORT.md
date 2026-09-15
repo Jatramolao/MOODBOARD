@@ -150,4 +150,3 @@ No se validaron en este ciclo: login por correo completo, creación remota de pr
 ![14-acceso-expirado](14-acceso-expirado.png)
 
 ![15-enlace-invalido](15-enlace-invalido.png)
-
